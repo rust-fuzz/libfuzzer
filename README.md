@@ -19,7 +19,7 @@ $ cat src/main.rs
 extern crate fuzzer_sys;
 
 #[export_name="LLVMFuzzerTestOneInput"]
-pub fn go(data: *const u8, size: isize) -> i32 {
+pub extern fn go(data: *const u8, size: isize) -> i32 {
     // fuzzed code goes here
     0
 }
