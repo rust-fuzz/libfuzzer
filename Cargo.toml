@@ -1,0 +1,9 @@
+[package]
+name = "fuzzer-sys"
+version = "0.1.0"
+authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+
+[dependencies]
+
+[build-dependencies]
+gcc = "0.3"
