@@ -3,6 +3,12 @@ name = "fuzzer-sys"
 version = "0.1.0"
 authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
 
+# cargo-fuzz puts this in a crate subdirectory,
+# which causes problems if the crate uses workspaces.
+# Create a useless local workspace to break out of this
+[workspace]
+members = ["."]
+
 [dependencies]
 
 [build-dependencies]
