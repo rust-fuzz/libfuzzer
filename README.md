@@ -18,6 +18,7 @@ fuzzer-sys = { path = "../libfuzzer-sys" } # or something
 
 $ cat src/main.rs
 #![no_main]
+
 #[macro_use]
 extern crate fuzzer_sys;
 
