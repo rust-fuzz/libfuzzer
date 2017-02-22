@@ -44,6 +44,6 @@ fuzz_target!(|data: &[u8]| {
 Finally, run the following commands:
 
 ```
-$ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address -Cpanic=abort
+$ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address
 $ ./target/debug/fuzzed # runs fuzzing
 ```
