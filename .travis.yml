@@ -1,4 +1,13 @@
 language: rust
-rust: nightly
-sudo: required
+sudo: false
+cache: cargo
 dist: trusty
+rust:
+  - nightly
+os:
+  - linux
+env:
+  - ARCH=x86_64
+notifications:
+  email: false
+script: cargo build --verbose
