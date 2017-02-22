@@ -6,30 +6,44 @@ libFuzzer relies on LLVM sanitizer support. The Rust compiler has built-in suppo
 
 # How to use
 
-“Manual” usage of this library looks like this:
+Use [cargo-fuzz].
+
+[cargo-fuzz]: https://github.com/rust-fuzz/cargo-fuzz
+
+This crate can also be used manually as following:
+
+First create a new cargo project:
 
 ```
 $ cargo new --bin fuzzed
 $ cd fuzzed
+```
 
-$ tail Cargo.toml -n2 # add libfuzzer-sys dependency
+Then add a dependency on the fuzzer-sys crate and your own crate:
+
+```toml
 [dependencies]
-fuzzer-sys = { path = "../libfuzzer-sys" } # or something
+fuzzer-sys = { path = "../libfuzzer-sys" } # or something, will eventually publish to crates.io
+your_crate = "*" # or something
+```
 
-$ cat src/main.rs
+and change the `src/main.rs` to fuzz your code:
+
+```rust
 #![no_main]
 
 #[macro_use]
 extern crate fuzzer_sys;
+extern crate your_crate;
 
 fuzz_target!(|data| {
     // code to fuzz goes here
 });
+```
 
+Finally, run the following commands:
+
+```
 $ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address -Cpanic=abort
 $ ./target/debug/fuzzed # runs fuzzing
 ```
-
-For a nice wrapper see [cargo-fuzz].
-
-[cargo-fuzz]: https://github.com/rust-fuzz/cargo-fuzz
