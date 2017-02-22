@@ -2,6 +2,7 @@
 name = "fuzzer-sys"
 version = "0.1.0"
 authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+repository = "https://github.com/rust-fuzz/libfuzzer-sys"
 
 # cargo-fuzz puts this in a crate subdirectory,
 # which causes problems if the crate uses workspaces.
