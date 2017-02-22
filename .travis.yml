@@ -10,4 +10,7 @@ env:
   - ARCH=x86_64
 notifications:
   email: false
-script: cargo build --verbose
+script:
+  - cd example
+  - cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address
+  - (! ./target/debug/example)

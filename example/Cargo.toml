@@ -1,0 +1,10 @@
+[package]
+name = "example"
+version = "0.1.0"
+authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+
+[workspace]
+members = ["."]
+
+[dependencies]
+fuzzer-sys = { path = ".." }
