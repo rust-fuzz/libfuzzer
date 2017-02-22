@@ -22,5 +22,11 @@ macro_rules! fuzz_target {
         pub extern fn rust_fuzzer_test_input($bytes: &[u8]) {
             $body
         }
+    };
+    (|$bytes:ident: &[u8]| $body:block) => {
+        #[no_mangle]
+        pub extern fn rust_fuzzer_test_input($bytes: &[u8]) {
+            $body
+        }
     }
 }

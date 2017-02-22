@@ -36,7 +36,7 @@ and change the `src/main.rs` to fuzz your code:
 extern crate fuzzer_sys;
 extern crate your_crate;
 
-fuzz_target!(|data| {
+fuzz_target!(|data: &[u8]| {
     // code to fuzz goes here
 });
 ```
