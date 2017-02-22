@@ -18,15 +18,17 @@ fuzzer-sys = { path = "../libfuzzer-sys" } # or something
 
 $ cat src/main.rs
 #![no_main]
+#[macro_use]
 extern crate fuzzer_sys;
 
-#[export_name="rust_fuzzer_test_input"]
-pub extern fn go(data: &[u8]) {
-    // code to be fuzzed goes here
-}
+fuzz_target!(|data| {
+    // code to fuzz goes here
+});
 
 $ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address -Cpanic=abort
 $ ./target/debug/fuzzed # runs fuzzing
 ```
 
-Nice wrappers incoming soon
+For a nice wrapper see [cargo-fuzz].
+
+[cargo-fuzz]: https://github.com/rust-fuzz/cargo-fuzz

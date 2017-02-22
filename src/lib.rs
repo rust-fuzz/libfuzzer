@@ -16,7 +16,7 @@ pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
 }
 
 #[macro_export]
-macro_rules! fuzzer_target {
+macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
         #[no_mangle]
         pub extern fn rust_fuzzer_test_input($bytes: &[u8]) {
