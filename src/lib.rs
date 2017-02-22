@@ -14,3 +14,13 @@ pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
     }).err().map(|_| ::std::process::abort());
     0
 }
+
+#[macro_export]
+macro_rules! fuzzer_target {
+    (|$bytes:ident| $body:block) => {
+        #[no_mangle]
+        pub extern fn rust_fuzzer_test_input($bytes: &[u8]) {
+            $body
+        }
+    }
+}
