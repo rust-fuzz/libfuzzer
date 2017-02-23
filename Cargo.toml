@@ -1,5 +1,5 @@
 [package]
-name = "fuzzer-sys"
+name = "libfuzzer-sys"
 version = "0.1.0"
 authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
 repository = "https://github.com/rust-fuzz/libfuzzer-sys"
