@@ -23,7 +23,7 @@ Then add a dependency on the fuzzer-sys crate and your own crate:
 
 ```toml
 [dependencies]
-fuzzer-sys = { path = "../libfuzzer-sys" } # or something, will eventually publish to crates.io
+fuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" } # will eventually publish to crates.io
 your_crate = "*" # or something
 ```
 
