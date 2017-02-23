@@ -7,4 +7,4 @@ authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
 members = ["."]
 
 [dependencies]
-fuzzer-sys = { path = ".." }
+libfuzzer-sys = { path = ".." }
