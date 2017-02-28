@@ -23,7 +23,7 @@ Then add a dependency on the fuzzer-sys crate and your own crate:
 
 ```toml
 [dependencies]
-fuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" } # will eventually publish to crates.io
+libfuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" } # will eventually publish to crates.io
 your_crate = "*" # or something
 ```
 
@@ -33,7 +33,7 @@ and change the `src/main.rs` to fuzz your code:
 #![no_main]
 
 #[macro_use]
-extern crate fuzzer_sys;
+extern crate libfuzzer_sys;
 extern crate your_crate;
 
 fuzz_target!(|data: &[u8]| {
