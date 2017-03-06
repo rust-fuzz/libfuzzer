@@ -1,7 +1,7 @@
 extern crate gcc;
 
 fn main() {
-    let sources = ::std::fs::read_dir("src")
+    let sources = ::std::fs::read_dir("llvm/lib/Fuzzer")
         .expect("listable source directory")
         .map(|de| de.expect("file in directory").path())
         .filter(|p| p.extension().map(|ext| ext == "cpp") == Some(true))
