@@ -47,3 +47,7 @@ Finally, run the following commands:
 $ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address
 $ ./target/debug/fuzzed # runs fuzzing
 ```
+
+## License
+
+All files in `llvm` are licensed NCSA. Everything else is dual-licensed Apache 2.0 and MIT.
