@@ -27,7 +27,7 @@ libfuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" } # wil
 your_crate = "*" # or something
 ```
 
-and change the `src/main.rs` to fuzz your code:
+and change the `src/main.rs` to fuzz your code (and add any optional setup/teardown code, such as starting/shutting down server thread):
 
 ```rust
 #![no_main]
@@ -35,6 +35,14 @@ and change the `src/main.rs` to fuzz your code:
 #[macro_use]
 extern crate libfuzzer_sys;
 extern crate your_crate;
+
+fuzz_setup!({
+    // Enter your setup here.
+});
+
+fuzz_teardown!({
+    // Enter your teardown here.
+});
 
 fuzz_target!(|data: &[u8]| {
     // code to fuzz goes here

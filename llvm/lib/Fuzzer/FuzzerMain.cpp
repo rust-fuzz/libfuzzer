@@ -14,8 +14,19 @@
 extern "C" {
 // This function should be defined by the user.
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size);
+
+// This function should be defined by the user.
+void LLVMFuzzerSetup(void);
+
+// This function should be defined by the user.
+void LLVMFuzzerTeardown(void);
 }  // extern "C"
 
 int main(int argc, char **argv) {
-  return fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
+
+  LLVMFuzzerSetup();
+  auto res = fuzzer::FuzzerDriver(&argc, &argv, LLVMFuzzerTestOneInput);
+  LLVMFuzzerTeardown();
+
+  return res;
 }
