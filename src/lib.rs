@@ -1,5 +1,3 @@
-#![feature(process_abort)]
-
 extern "C" {
     #![allow(improper_ctypes)] // we do not actually cross the FFI bound here
 
@@ -23,10 +21,24 @@ macro_rules! fuzz_target {
             $body
         }
     };
-    (|$bytes:ident: &[u8]| $body:block) => {
+    (|$data:ident: &[u8]| $body:block) => {
+        fuzz_target!(|$data| $body);
+    };
+    (|$data:ident: $dty: ty| $body:block) => {
+        extern crate arbitrary;
+
         #[no_mangle]
-        pub extern fn rust_fuzzer_test_input($bytes: &[u8]) {
+        pub extern fn rust_fuzzer_test_input(bytes: &[u8]) {
+            use arbitrary::{Arbitrary, RingBuffer};
+
+            let $data: $dty = if let Ok(d) = RingBuffer::new(bytes, bytes.len()).and_then(|mut b|{
+                Arbitrary::arbitrary(&mut b).map_err(|_| "")
+            }) {
+                d
+            } else {
+                return
+            };
             $body
         }
-    }
+    };
 }
