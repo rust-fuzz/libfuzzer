@@ -12,5 +12,8 @@ notifications:
   email: false
 script:
   - cd example
-  - cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address
-  - (! ./target/debug/example)
+  - cargo rustc --release -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=4' -Z sanitizer=address
+  - (! ./target/release/example -runs=100000)
+  - cd ../example_arbitrary
+  - cargo rustc --release -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=4' -Z sanitizer=address
+  - (! ./target/release/example -runs=10000000)
