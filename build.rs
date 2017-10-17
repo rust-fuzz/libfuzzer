@@ -1,4 +1,4 @@
-extern crate gcc;
+extern crate cc;
 
 fn main() {
     if let Ok(custom) = ::std::env::var("CUSTOM_LIBFUZZER_PATH") {
@@ -13,18 +13,18 @@ fn main() {
         /* FIXME: this is assuming a C++ fuzzer, but should be customizable */
         println!("cargo:rustc-link-lib=stdc++");
     } else {
-        let mut config = gcc::Config::new();
+        let mut build = cc::Build::new();
         let sources = ::std::fs::read_dir("llvm/lib/Fuzzer")
             .expect("listable source directory")
             .map(|de| de.expect("file in directory").path())
             .filter(|p| p.extension().map(|ext| ext == "cpp") == Some(true))
             .collect::<Vec<_>>();
         for source in sources.iter() {
-            config.file(source.to_str().unwrap());
+            build.file(source.to_str().unwrap());
         }
-        config.flag("-std=c++11");
-        config.flag("-fno-omit-frame-pointer");
-        config.cpp(true);
-        config.compile("libfuzzer.a");
+        build.flag("-std=c++11");
+        build.flag("-fno-omit-frame-pointer");
+        build.cpp(true);
+        build.compile("libfuzzer.a");
     }
 }
