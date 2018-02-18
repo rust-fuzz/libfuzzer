@@ -1,6 +1,6 @@
 Barebones wrapper around libFuzzer runtime library.
 
-The CPP parts are extracted from llvm git repository with `git filter-branch`.
+The CPP parts are extracted from compiler-rt git repository with `git filter-branch`.
 
 libFuzzer relies on LLVM sanitizer support. The Rust compiler has built-in support for LLVM sanitizer support, for now, it's limited to Linux. As a result, libfuzzer-sys only works on Linux.
 
@@ -50,4 +50,5 @@ $ ./target/debug/fuzzed # runs fuzzing
 
 ## License
 
-All files in `llvm` are licensed NCSA. Everything else is dual-licensed Apache 2.0 and MIT.
+All files in `libfuzzer` directory are licensed NCSA.
+Everything else is dual-licensed Apache 2.0 and MIT.

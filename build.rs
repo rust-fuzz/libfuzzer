@@ -14,7 +14,7 @@ fn main() {
         println!("cargo:rustc-link-lib=stdc++");
     } else {
         let mut build = cc::Build::new();
-        let sources = ::std::fs::read_dir("llvm/lib/Fuzzer")
+        let sources = ::std::fs::read_dir("libfuzzer")
             .expect("listable source directory")
             .map(|de| de.expect("file in directory").path())
             .filter(|p| p.extension().map(|ext| ext == "cpp") == Some(true))
@@ -24,6 +24,7 @@ fn main() {
         }
         build.flag("-std=c++11");
         build.flag("-fno-omit-frame-pointer");
+        build.flag("-w");
         build.cpp(true);
         build.compile("libfuzzer.a");
     }
