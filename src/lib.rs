@@ -7,7 +7,7 @@ extern "C" {
     fn _ZN6fuzzer12FuzzerDriverEPiPPPcPFiPKhmE(argc: *mut c_int, argv: *mut *mut *mut c_char, callback: extern fn(*const u8, usize) -> c_int );
 }
 
-static mut STATIC_CLOSURE: Option<Box<FnMut(&[u8])>> = None;
+static mut STATIC_CLOSURE: Option<&mut FnMut(&[u8])> = None;
 
 // #[no_mangle]
 // pub extern "C" fn LLVMFuzzerInitialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
@@ -37,7 +37,7 @@ pub extern "C" fn LLVMFuzzerTestOneInput(data: *const u8, size: usize) -> c_int 
     0
 }
 
-pub fn fuzz<F>(closure: F) where F: Fn(&[u8]) + std::panic::RefUnwindSafe + 'static {
+pub fn fuzz<F>(closure: &mut F) where F: FnMut(&[u8]) + std::panic::RefUnwindSafe {
     // Converts env::args() to C format
     let args   = std::env::args()
                     .map(|arg| CString::new(arg).unwrap()) // convert args to null terminated C strings
@@ -63,8 +63,8 @@ pub fn fuzz<F>(closure: F) where F: Fn(&[u8]) + std::panic::RefUnwindSafe + 'sta
     }));
 
     unsafe {
-        // save closure at static location
-        STATIC_CLOSURE = Some(Box::new(closure));
+        // save closure at static location and forget its lifetime
+        STATIC_CLOSURE = Some(std::mem::transmute(closure as &mut FnMut(&[u8])));
 
         // call C++ mangled method `fuzzer::FuzzerDriver()`
         _ZN6fuzzer12FuzzerDriverEPiPPPcPFiPKhmE(&mut argc, &mut argv, LLVMFuzzerTestOneInput);
@@ -74,13 +74,13 @@ pub fn fuzz<F>(closure: F) where F: Fn(&[u8]) + std::panic::RefUnwindSafe + 'sta
 #[macro_export]
 macro_rules! fuzz {
     (|$buf:ident| $body:block) => {
-        libfuzzer_sys::fuzz(move |$buf| $body);
+        libfuzzer_sys::fuzz(&mut |$buf| $body);
     };
     (|$buf:ident: &[u8]| $body:block) => {
-        libfuzzer_sys::fuzz(move |$buf| $body);
+        libfuzzer_sys::fuzz(&mut |$buf| $body);
     };
     (|$buf:ident: $dty: ty| $body:block) => {
-        libfuzzer_sys::fuzz(move |$buf| {
+        libfuzzer_sys::fuzz(&mut |$buf| {
             let $buf: $dty = {
                 use arbitrary::{Arbitrary, RingBuffer};
                 if let Ok(d) = RingBuffer::new($buf, $buf.len()).and_then(|mut b|{
