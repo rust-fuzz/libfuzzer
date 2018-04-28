@@ -13,44 +13,79 @@
 
 pub use arbitrary;
 
+
+use std::os::raw::c_char;
+use std::os::raw::c_int;
+use std::ffi::CString;
+use std::{panic, ptr};
+
 extern "C" {
-    // We do not actually cross the FFI bound here.
-    #[allow(improper_ctypes)]
-    fn rust_fuzzer_test_input(input: &[u8]);
+    // This is the mangled name of the C++ function starting the fuzzer
+    fn _ZN6fuzzer12FuzzerDriverEPiPPPcPFiPKhmE(argc: *mut c_int, argv: *mut *mut *mut c_char, callback: extern fn(*const u8, usize) -> c_int );
 }
 
+static mut STATIC_CLOSURE: *const () = ptr::null();
+
 #[doc(hidden)]
-#[export_name = "LLVMFuzzerTestOneInput"]
-pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
-    let test_input = ::std::panic::catch_unwind(|| unsafe {
+pub extern "C" fn test_one_input<F>(data: *const u8, size: usize) -> c_int where F: Fn(&[u8]) + panic::RefUnwindSafe {
+    unsafe {
         let data_slice = ::std::slice::from_raw_parts(data, size);
-        rust_fuzzer_test_input(data_slice);
-    });
-    if test_input.err().is_some() {
-        // hopefully the custom panic hook will be called before and abort the
-        // process before the stack frames are unwinded.
-        ::std::process::abort();
+        let closure = STATIC_CLOSURE as *const F;
+        // We still catch unwinding panics just in case the fuzzed code modifies
+        // the panic hook.
+        // If so, the fuzzer will be unable to tell different bugs appart and you will
+        // only be able to find one bug at a time before fixing it to then find a new one.
+        let did_panic = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+            (&*closure)(data_slice);
+        })).is_err();
+
+        if did_panic {
+            // hopefully the custom panic hook will be called before and abort the
+            // process before the stack frames are unwinded.
+            std::process::abort();
+        }
     }
     0
 }
 
-#[doc(hidden)]
-#[export_name = "LLVMFuzzerInitialize"]
-pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
+/// Run libfuzzer with a given closure
+///
+/// This is the undelying API used by the [`fuzz!()`] macro, use that instead where possible.
+pub fn fuzz<F>(closure: F) where F: Fn(&[u8]) + std::panic::RefUnwindSafe + Sync + Send {
+    // Converts env::args() to C format
+    let args   = std::env::args()
+                    .map(|arg| CString::new(arg).unwrap()) // convert args to null terminated C strings
+                    .collect::<Vec<_>>();
+    let c_args = args.iter()
+                    .map(|arg| arg.as_ptr())
+                    .chain(std::iter::once(std::ptr::null())) // C standard expects the array of args to be null terminated
+                    .collect::<Vec<*const c_char>>();
+
+    let mut argc = c_args.len() as c_int - 1;
+    let mut argv = c_args.as_ptr() as *mut *mut c_char;
+
     // Registers a panic hook that aborts the process before unwinding.
     // It is useful to abort before unwinding so that the fuzzer will then be
     // able to analyse the process stack frames to tell different bugs appart.
-    //
+    // 
     // HACK / FIXME: it would be better to use `-C panic=abort` but it's currently
     // impossible to build code using compiler plugins with this flag.
     // We will be able to remove this code when
     // https://github.com/rust-lang/cargo/issues/5423 is fixed.
-    let default_hook = ::std::panic::take_hook();
-    ::std::panic::set_hook(Box::new(move |panic_info| {
+    let default_hook = panic::take_hook();
+    panic::set_hook(Box::new(move |panic_info| {
         default_hook(panic_info);
-        ::std::process::abort();
+        std::process::abort();
     }));
-    0
+
+    unsafe {
+        assert!(STATIC_CLOSURE.is_null());
+        // save closure capture at static location
+        STATIC_CLOSURE = Box::into_raw(Box::new(closure)) as *const ();
+
+        // call C++ mangled method `fuzzer::FuzzerDriver()`
+        _ZN6fuzzer12FuzzerDriverEPiPPPcPFiPKhmE(&mut argc, &mut argv, test_one_input::<F>);
+    }
 }
 
 /// Define a fuzz target.
@@ -61,9 +96,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// might fail and return an `Err`, but it shouldn't ever panic or segfault.
 ///
 /// ```no_run
-/// #![no_main]
-///
-/// use libfuzzer_sys::fuzz_target;
+/// use libfuzzer_sys::fuzz;
 ///
 /// // Note: `|input|` is short for `|input: &[u8]|`.
 /// fuzz_target!(|input| {
@@ -83,65 +116,45 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// following:
 ///
 /// ```no_run
-/// #![no_main]
+/// use libfuzzer_sys::{arbitrary, fuzz};
 ///
-/// use libfuzzer_sys::{arbitrary::{Arbitrary, Unstructured}, fuzz_target};
-///
-/// #[derive(Debug)]
+/// #[derive(Debug, arbitrary::Arbitrary)]
 /// pub struct Rgb {
 ///     r: u8,
 ///     g: u8,
 ///     b: u8,
 /// }
 ///
-/// impl Arbitrary for Rgb {
-///     fn arbitrary<U>(raw: &mut U) -> Result<Self, U::Error>
-///     where
-///         U: Unstructured + ?Sized
-///     {
-///         let mut buf = [0; 3];
-///         raw.fill_buffer(&mut buf)?;
-///         let r = buf[0];
-///         let g = buf[1];
-///         let b = buf[2];
-///         Ok(Rgb { r, g, b })
-///     }
-/// }
-///
 /// // Write a fuzz target that works with RGB colors instead of raw bytes.
-/// fuzz_target!(|color: Rgb| {
+/// fuzz!(|color: Rgb| {
 ///     my_crate::convert_color(color);
 /// });
 /// # mod my_crate { fn convert_color(_: super::Rgb) {} }
 #[macro_export]
-macro_rules! fuzz_target {
-    (|$bytes:ident| $body:block) => {
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input($bytes: &[u8]) {
-            $body
-        }
+macro_rules! fuzz {
+    (|$buf:ident| $body:block) => {
+        $crate::fuzz(|$buf| $body);
     };
-
-    (|$data:ident: &[u8]| $body:block) => {
-        fuzz_target!(|$data| $body);
+    (|$buf:ident: &[u8]| $body:block) => {
+        $crate::fuzz(|$buf| $body);
     };
+    (|$buf:ident: $dty: ty| $body:block) => {
+        $crate::fuzz(|$buf| {
+            let $buf: $dty = {
+                use $crate::arbitrary::{Arbitrary, RingBuffer};
+                let mut buf = match RingBuffer::new($buf, $buf.len()) {
+                    Ok(b) => b,
+                    Err(_) => return,
+                };
 
-    (|$data:ident: $dty: ty| $body:block) => {
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use libfuzzer_sys::arbitrary::{Arbitrary, RingBuffer};
-
-            let mut buf = match RingBuffer::new(bytes, bytes.len()) {
-                Ok(b) => b,
-                Err(_) => return,
-            };
-
-            let $data: $dty = match Arbitrary::arbitrary(&mut buf) {
-                Ok(d) => d,
-                Err(_) => return,
+                let d: $dty = match Arbitrary::arbitrary(&mut buf) {
+                    Ok(d) => d,
+                    Err(_) => return,
+                };
+                d
             };
 
             $body
-        }
+        });
     };
 }
