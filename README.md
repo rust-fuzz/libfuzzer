@@ -48,6 +48,12 @@ $ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -
 $ ./target/debug/fuzzed # runs fuzzing
 ```
 
+## Updating libfuzzer from upstream
+
+```
+./update-libfuzzer.sh <llvm/compiler-rt SHA1>
+```
+
 ## License
 
 All files in `libfuzzer` directory are licensed NCSA.
