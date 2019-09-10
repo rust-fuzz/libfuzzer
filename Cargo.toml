@@ -4,6 +4,7 @@ version = "0.1.0"
 authors = ["The cargo-fuzz Project Developers"]
 repository = "https://github.com/rust-fuzz/libfuzzer-sys"
 license = "MIT/Apache-2.0/NCSA"
+description = "LibFuzzer wrapper for Rust"
 
 # cargo-fuzz puts this in a crate subdirectory,
 # which causes problems if the crate uses workspaces.
