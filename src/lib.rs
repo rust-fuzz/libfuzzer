@@ -1,10 +1,10 @@
-extern "C" {
 #![allow(improper_ctypes)] // we do not actually cross the FFI bound here
-
+extern "C" {
     fn rust_fuzzer_test_input(input: &[u8]);
 }
 
 #[export_name = "LLVMFuzzerTestOneInput"]
+#[allow(clippy::block_in_if_condition_stmt)]
 pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
     if ::std::panic::catch_unwind(|| unsafe {
         let data_slice = ::std::slice::from_raw_parts(data, size);
