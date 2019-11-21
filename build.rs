@@ -1,5 +1,3 @@
-extern crate cc;
-
 fn main() {
     if let Ok(custom) = ::std::env::var("CUSTOM_LIBFUZZER_PATH") {
         let custom_lib_path = ::std::path::PathBuf::from(&custom);

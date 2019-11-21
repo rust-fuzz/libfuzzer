@@ -32,9 +32,7 @@ and change the `src/main.rs` to fuzz your code:
 ```rust
 #![no_main]
 
-#[macro_use]
-extern crate libfuzzer_sys;
-extern crate your_crate;
+use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
     // code to fuzz goes here
