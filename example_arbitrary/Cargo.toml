@@ -2,6 +2,7 @@
 name = "example"
 version = "0.1.0"
 authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+edition = "2018"
 
 [workspace]
 members = ["."]
