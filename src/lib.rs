@@ -50,13 +50,16 @@ macro_rules! fuzz_target {
         pub extern fn rust_fuzzer_test_input(bytes: &[u8]) {
             use arbitrary::{Arbitrary, RingBuffer};
 
-            let $data: $dty = if let Ok(d) = RingBuffer::new(bytes, bytes.len()).and_then(|mut b|{
-                Arbitrary::arbitrary(&mut b).map_err(|_| "")
-            }) {
-                d
-            } else {
-                return
+            let mut buf = match RingBuffer::new(bytes, bytes.len()) {
+                Ok(b) => b,
+                Err(_) => return,
             };
+
+            let $data: $dty = match Arbitrary::arbitrary(&mut buf) {
+                Ok(d) => d,
+                Err(_) => return,
+            };
+
             $body
         }
     };
