@@ -28,7 +28,9 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
     // impossible to build code using compiler plugins with this flag.
     // We will be able to remove this code when
     // https://github.com/rust-lang/cargo/issues/5423 is fixed.
-    ::std::panic::set_hook(Box::new(|_| {
+    let default_hook = ::std::panic::take_hook();
+    ::std::panic::set_hook(Box::new(move |panic_info| {
+            default_hook(panic_info);
             ::std::process::abort();
     }));
     0
