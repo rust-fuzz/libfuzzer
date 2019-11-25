@@ -9,4 +9,4 @@ members = ["."]
 
 [dependencies]
 libfuzzer-sys = { path = ".." }
-arbitrary = "0.1"
+arbitrary = "0.2"
