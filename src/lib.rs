@@ -1,3 +1,5 @@
+pub use arbitrary;
+
 extern "C" {
     #![allow(improper_ctypes)] // we do not actually cross the FFI bound here
 
@@ -48,7 +50,7 @@ macro_rules! fuzz_target {
     (|$data:ident: $dty: ty| $body:block) => {
         #[no_mangle]
         pub extern fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use arbitrary::{Arbitrary, RingBuffer};
+            use libfuzzer_sys::arbitrary::{Arbitrary, RingBuffer};
 
             let mut buf = match RingBuffer::new(bytes, bytes.len()) {
                 Ok(b) => b,
