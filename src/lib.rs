@@ -143,5 +143,25 @@ macro_rules! fuzz_target {
 
             $body
         }
+
+
+        #[export_name = "LLVMFuzzerCustomOutput"]
+        pub extern "C" fn output(ptr: *const u8, len: usize) {
+            use libfuzzer_sys::arbitrary::{Arbitrary, RingBuffer};
+
+            let bytes = unsafe { std::slice::from_raw_parts(ptr, len) };
+
+            let mut buf = match RingBuffer::new(bytes, bytes.len()) {
+                Ok(b) => b,
+                Err(_) => return,
+            };
+
+            let data: $dty = match Arbitrary::arbitrary(&mut buf) {
+                Ok(d) => d,
+                Err(_) => return,
+            };
+
+            println!("Formatted: {:?}", data);
+        }
     };
 }

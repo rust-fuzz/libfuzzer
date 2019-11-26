@@ -183,6 +183,9 @@ void Fuzzer::DumpCurrentUnit(const char *Prefix) {
     PrintHexArray(CurrentUnitData, UnitSize, "\n");
     PrintASCII(CurrentUnitData, UnitSize, "\n");
   }
+  if (EF->LLVMFuzzerCustomOutput) {
+    EF->LLVMFuzzerCustomOutput(CurrentUnitData, CurrentUnitSize);
+  }
   WriteUnitToFileWithPrefix({CurrentUnitData, CurrentUnitData + UnitSize},
                             Prefix);
 }
