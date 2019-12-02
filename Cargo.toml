@@ -13,7 +13,7 @@ edition = "2018"
 members = ["."]
 
 [dependencies]
-arbitrary = "0.1"
+arbitrary = "0.2"
 
 [build-dependencies]
 cc = "1.0"
