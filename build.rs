@@ -18,6 +18,7 @@ fn main() {
             .filter(|p| p.extension().map(|ext| ext == "cpp") == Some(true))
             .collect::<Vec<_>>();
         for source in sources.iter() {
+            println!("cargo:rerun-if-changed={}", source.display());
             build.file(source.to_str().unwrap());
         }
         build.flag("-std=c++11");
