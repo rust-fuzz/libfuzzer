@@ -8,5 +8,4 @@ edition = "2018"
 members = ["."]
 
 [dependencies]
-libfuzzer-sys = { path = ".." }
-arbitrary = "0.2"
+libfuzzer-sys = { path = "..", features = ["arbitrary-derive"] }

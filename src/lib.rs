@@ -129,14 +129,11 @@ macro_rules! fuzz_target {
     (|$data:ident: $dty: ty| $body:block) => {
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use libfuzzer_sys::arbitrary::{Arbitrary, RingBuffer};
+            use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
 
-            let mut buf = match RingBuffer::new(bytes, bytes.len()) {
-                Ok(b) => b,
-                Err(_) => return,
-            };
+            let mut u = Unstructured::new(bytes);
 
-            let $data: $dty = match Arbitrary::arbitrary(&mut buf) {
+            let $data: $dty = match Arbitrary::arbitrary_take_rest(u) {
                 Ok(d) => d,
                 Err(_) => return,
             };
