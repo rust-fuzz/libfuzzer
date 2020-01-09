@@ -33,4 +33,9 @@ cargo rustc \
       -Cllvm-args=-sanitizer-coverage-prune-blocks=0 \
       -Zsanitizer=address
 (! $CARGO_TARGET_DIR/release/example_arbitrary -runs=10000000)
+RUST_LIBFUZZER_DEBUG_PATH=$(pwd)/debug_output \
+    $CARGO_TARGET_DIR/release/example_arbitrary \
+    $(ls ./crash-* | head -n 1)
+cat $(pwd)/debug_output
+grep -q Rgb $(pwd)/debug_output
 popd
