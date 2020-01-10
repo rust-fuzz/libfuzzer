@@ -1,5 +1,5 @@
 [package]
-name = "example"
+name = "example_arbitrary"
 version = "0.1.0"
 authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
 edition = "2018"
@@ -8,5 +8,4 @@ edition = "2018"
 members = ["."]
 
 [dependencies]
-libfuzzer-sys = { path = ".." }
-arbitrary = "0.2"
+libfuzzer-sys = { path = "..", features = ["arbitrary-derive"] }

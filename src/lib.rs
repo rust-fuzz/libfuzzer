@@ -118,6 +118,18 @@ macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input($bytes: &[u8]) {
+            // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
+            // formatting of the input to that file. This is only intended for
+            // `cargo fuzz`'s use!
+            if let Ok(path) = std::env::var("RUST_LIBFUZZER_DEBUG_PATH") {
+                use std::io::Write;
+                let mut file = std::fs::File::create(path)
+                    .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
+                writeln!(&mut file, "{:?}", $bytes)
+                    .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                return;
+            }
+
             $body
         }
     };
@@ -129,14 +141,27 @@ macro_rules! fuzz_target {
     (|$data:ident: $dty: ty| $body:block) => {
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use libfuzzer_sys::arbitrary::{Arbitrary, RingBuffer};
+            use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
 
-            let mut buf = match RingBuffer::new(bytes, bytes.len()) {
-                Ok(b) => b,
-                Err(_) => return,
-            };
+            let mut u = Unstructured::new(bytes);
+            let data = <$dty as Arbitrary>::arbitrary_take_rest(u);
 
-            let $data: $dty = match Arbitrary::arbitrary(&mut buf) {
+            // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
+            // formatting of the input to that file. This is only intended for
+            // `cargo fuzz`'s use!
+            if let Ok(path) = std::env::var("RUST_LIBFUZZER_DEBUG_PATH") {
+                use std::io::Write;
+                let mut file = std::fs::File::create(path)
+                    .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
+                (match data {
+                    Ok(data) => writeln!(&mut file, "{:#?}", data),
+                    Err(err) => writeln!(&mut file, "Arbitrary Error: {}", err),
+                })
+                .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                return;
+            }
+
+            let $data = match data {
                 Ok(d) => d,
                 Err(_) => return,
             };
