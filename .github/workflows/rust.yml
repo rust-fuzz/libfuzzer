@@ -1,0 +1,13 @@
+name: Rust
+
+on: [push, pull]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v1
+    - name: Run tests
+      run: ./ci/script.sh
