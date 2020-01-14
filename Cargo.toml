@@ -1,5 +1,6 @@
 [package]
 authors = ["The rust-fuzz Project Developers"]
+description = "A wrapper around LLVM's libFuzzer runtime."
 edition = "2018"
 license = "MIT/Apache-2.0/NCSA"
 name = "libfuzzer-sys"
