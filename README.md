@@ -1,14 +1,20 @@
-Barebones wrapper around libFuzzer runtime library.
+# The `libfuzzer-sys` Crate
+
+Barebones wrapper around LLVM's libFuzzer runtime library.
 
 The CPP parts are extracted from compiler-rt git repository with `git filter-branch`.
 
-libFuzzer relies on LLVM sanitizer support. The Rust compiler has built-in support for LLVM sanitizer support, for now, it's limited to Linux. As a result, libfuzzer-sys only works on Linux.
+libFuzzer relies on LLVM sanitizer support. The Rust compiler has built-in support for LLVM sanitizer support, for now, it's limited to Linux. As a result, `libfuzzer-sys` only works on Linux.
 
-# How to use
+## Usage
 
-Use [cargo-fuzz].
+### Use `cargo fuzz`!
+
+[The recommended way to use this crate with `cargo fuzz`!][cargo-fuzz].
 
 [cargo-fuzz]: https://github.com/rust-fuzz/cargo-fuzz
+
+### Manual Usage
 
 This crate can also be used manually as following:
 
@@ -19,15 +25,15 @@ $ cargo new --bin fuzzed
 $ cd fuzzed
 ```
 
-Then add a dependency on the fuzzer-sys crate and your own crate:
+Then add a dependency on the `fuzzer-sys` crate and your own crate:
 
 ```toml
 [dependencies]
-libfuzzer-sys = { git = "https://github.com/rust-fuzz/libfuzzer-sys.git" } # will eventually publish to crates.io
-your_crate = "*" # or something
+libfuzzer-sys = "0.2.0"
+your_crate = { path = "../path/to/your/crate" }
 ```
 
-and change the `src/main.rs` to fuzz your code:
+Change the `fuzzed/src/main.rs` to fuzz your code:
 
 ```rust
 #![no_main]
@@ -39,11 +45,19 @@ fuzz_target!(|data: &[u8]| {
 });
 ```
 
-Finally, run the following commands:
+Build by running the following command:
 
+```sh
+$ cargo rustc -- \
+    -C passes='sancov' \
+    -C llvm-args='-sanitizer-coverage-level=3' \
+    -Z sanitizer=address
 ```
-$ cargo rustc -- -C passes='sancov' -C llvm-args='-sanitizer-coverage-level=3' -Z sanitizer=address
-$ ./target/debug/fuzzed # runs fuzzing
+
+And finally, run the fuzzer:
+
+```sh
+$ ./target/debug/fuzzed
 ```
 
 ## Updating libfuzzer from upstream
@@ -55,4 +69,5 @@ $ ./target/debug/fuzzed # runs fuzzing
 ## License
 
 All files in `libfuzzer` directory are licensed NCSA.
+
 Everything else is dual-licensed Apache 2.0 and MIT.
