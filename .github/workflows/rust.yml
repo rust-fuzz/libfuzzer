@@ -1,6 +1,6 @@
 name: Rust
 
-on: [push, pull]
+on: [push, pull_request]
 
 jobs:
   build:
@@ -9,5 +9,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
+
+    - name: Check rustfmt
+      run: |
+        rustup component add rustfmt --toolchain stable
+        cargo +stable fmt --all -- --check
+
     - name: Run tests
       run: ./ci/script.sh
