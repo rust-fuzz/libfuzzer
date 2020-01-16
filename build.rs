@@ -9,17 +9,11 @@ fn main() {
         println!("cargo:rustc-link-search=native={}", custom_lib_dir);
         println!("cargo:rustc-link-lib=static={}", custom_lib_name);
 
-        // Allow user to specify use of LLVM or GCC C++ stdlib, or none.
-        // "cargo:rustc-link-lib=stdc++" is used by default for
-        // backward-compatibility.
-        // Note: google/oss-fuzz uses LLVM C++ stdlib as of 15 Jan 2020
-        if let Ok(std_cxx_flag) = ::std::env::var("CUSTOM_LIBFUZZER_STD_CXX") {
-            match std_cxx_flag.as_str() {
-                "c++" => println!("cargo:rustc-link-lib=c++"),
-                "stdc++" => println!("cargo:rustc-link-lib=stdc++"),
-                "none" => (),
-                _ => println!("cargo:rustc-link-lib=stdc++"),
-            }
+        match std::env::var("CUSTOM_LIBFUZZER_STD_CXX") {
+            // Default behavior for backwards compat.
+            Err(_) => println!("cargo:rustc-link-lib=stdc++"),
+            Ok(s) if s == "none" => (),
+            Ok(s) => println!("cargo:rustc-link-lib={}", s),
         }
     } else {
         let mut build = cc::Build::new();
