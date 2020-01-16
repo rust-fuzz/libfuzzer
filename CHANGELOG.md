@@ -28,6 +28,19 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.2.1
+
+Released 2019-01-16.
+
+### Added
+
+* Added support for the `CUSTOM_LIBFUZZER_STD_CXX=<lib>` environment variable
+  during builds that already use a custom libFuzzer checkout with
+  `CUSTOM_LIBFUZZER_PATH`. This allows you to explicitly choose to link LLVM or
+  GNU C++ standard libraries.
+
+--------------------------------------------------------------------------------
+
 ## 0.2.0
 
 Released 2020-01-14.
