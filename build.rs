@@ -8,8 +8,13 @@ fn main() {
 
         println!("cargo:rustc-link-search=native={}", custom_lib_dir);
         println!("cargo:rustc-link-lib=static={}", custom_lib_name);
-        /* FIXME: this is assuming a C++ fuzzer, but should be customizable */
-        println!("cargo:rustc-link-lib=stdc++");
+
+        match std::env::var("CUSTOM_LIBFUZZER_STD_CXX") {
+            // Default behavior for backwards compat.
+            Err(_) => println!("cargo:rustc-link-lib=stdc++"),
+            Ok(s) if s == "none" => (),
+            Ok(s) => println!("cargo:rustc-link-lib={}", s),
+        }
     } else {
         let mut build = cc::Build::new();
         let sources = ::std::fs::read_dir("libfuzzer")
