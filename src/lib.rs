@@ -143,6 +143,16 @@ macro_rules! fuzz_target {
         pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
             use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
 
+            // Early exit if we don't have enough bytes for the `Arbitrary`
+            // implementation. This helps the fuzzer avoid exploring all the
+            // different not-enough-input-bytes paths inside the `Arbitrary`
+            // implementation. Additionally, it exits faster, letting the fuzzer
+            // get to longer inputs that actually lead to interesting executions
+            // quicker.
+            if bytes.len() < <$dty as Arbitrary>::size_hint(0).0 {
+                return;
+            }
+
             let mut u = Unstructured::new(bytes);
             let data = <$dty as Arbitrary>::arbitrary_take_rest(u);
 
