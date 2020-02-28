@@ -28,6 +28,19 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.3.1
+
+Released 2020-02-27.
+
+### Changed
+
+* Fixed a fuzzing performance issue where libfuzzer could unnecessarily spend
+  time exploring all the ways that an `Arbitrary` implementation could fail to
+  construct an instance of itself because the fuzzer provided too few bytes. See
+  https://github.com/rust-fuzz/libfuzzer/issues/59 for details.
+
+--------------------------------------------------------------------------------
+
 ## 0.3.0
 
 Released 2019-01-22.
