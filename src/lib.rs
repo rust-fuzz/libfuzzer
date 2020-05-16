@@ -13,10 +13,62 @@
 
 pub use arbitrary;
 
+mod buffer;
+pub use buffer::*;
+
 extern "C" {
     // We do not actually cross the FFI bound here.
     #[allow(improper_ctypes)]
     fn rust_fuzzer_test_input(input: &[u8]);
+
+    fn LLVMFuzzerMutate(data: *mut u8, size: usize, max_size: usize) -> usize;
+}
+
+#[doc(hidden)]
+#[derive(Debug)]
+pub enum LlvmFuzzerMutateHelper<'b> {
+    Vec(&'b mut Vec<u8>),
+    Buffer(&'b mut Buffer),
+}
+
+impl<'b> From<&'b mut Vec<u8>> for LlvmFuzzerMutateHelper<'b> {
+    fn from(v: &'b mut Vec<u8>) -> LlvmFuzzerMutateHelper<'b> {
+        Self::Vec(v)
+    }
+}
+
+impl<'b> From<&'b mut Buffer> for LlvmFuzzerMutateHelper<'b> {
+    fn from(v: &'b mut Buffer) -> LlvmFuzzerMutateHelper<'b> {
+        Self::Buffer(v)
+    }
+}
+
+/// Call libfuzzer's mutator on a byte slice.
+pub fn llvm_fuzzer_mutate<'b, I: Into<LlvmFuzzerMutateHelper<'b>>>(data: I, max_size: usize) {
+    use LlvmFuzzerMutateHelper::*;
+
+    let mut helper = data.into();
+    if let Vec(ref mut v) = helper {
+        if v.len() < max_size {
+            v.reserve(max_size - v.len());
+        };
+    }
+    let size = match &helper {
+        Vec(v) => v.len(),
+        Buffer(b) => b.len(),
+    };
+    let ptr = match &mut helper {
+        Vec(v) => v.as_mut_ptr(),
+        Buffer(b) => b.as_mut_ptr(),
+    };
+
+    unsafe {
+        let new_len = LLVMFuzzerMutate(ptr, size, max_size);
+        match helper {
+            Vec(v) => v.set_len(new_len),
+            Buffer(b) => b.set_len(new_len),
+        }
+    }
 }
 
 #[doc(hidden)]
@@ -179,4 +231,53 @@ macro_rules! fuzz_target {
             $body
         }
     };
+}
+
+/// Define a custom fuzz mutator.
+///
+/// If `$bytes` exceeds `$max_size`, it will be silently truncated.
+///
+/// ## Example
+/// ```no_run
+/// #![no_main]
+/// use libfuzzer_sys::{fuzz_target, fuzz_mutator, llvm_fuzzer_mutate};
+///
+/// fuzz_target!(|data: &[u8]| {
+///     let _ = std::str::from_utf8(data);
+/// });
+///
+/// fuzz_mutator!(|data: &mut [u8], max_size: usize| {
+///     println!("custom mutator called with data len = {} and max_size = {}", data.len(), max_size);
+///     llvm_fuzzer_mutate(data, max_size)
+/// });
+/// ```
+#[macro_export]
+macro_rules! fuzz_mutator {
+    (|$bytes:ident: &mut Vec<u8>, $max_size:ident: usize| $body:block) => {
+        #[doc(hidden)]
+        #[export_name = "LLVMFuzzerCustomMutator"]
+        pub fn mutate_input_wrap(data: *mut u8, size: usize, max_size: usize, seed: u32) -> usize {
+            let data_slice: &[u8] = unsafe { &(*core::ptr::slice_from_raw_parts(data, size)) };
+            let mut bytes_vec = data_slice.to_vec();
+            {
+                let $bytes = &mut bytes_vec;
+                let $max_size = max_size;
+                $body
+            }
+            let len = core::cmp::min(bytes_vec.len(), max_size);
+            unsafe { core::ptr::copy_nonoverlapping(bytes_vec.as_ptr(), data, len); }
+            len
+        }
+    };
+    (|$bytes:ident: mut Buffer, $max_size:ident: usize| $body:block) => {
+        #[doc(hidden)]
+        #[export_name = "LLVMFuzzerCustomMutator"]
+        pub fn mutate_input_wrap(data: *mut u8, size: usize, max_size: usize, seed: u32) -> usize {
+            let mut $bytes = Buffer::new(data, size, max_size);
+            let $max_size = max_size;
+            $body
+            $bytes.len()
+        }
+    };
+    (|$data:ident: $dty: ty| $body:block) => {};
 }
