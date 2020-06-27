@@ -29,7 +29,7 @@ Then add a dependency on the `fuzzer-sys` crate and your own crate:
 
 ```toml
 [dependencies]
-libfuzzer-sys = "0.2.0"
+libfuzzer-sys = "0.3.0"
 your_crate = { path = "../path/to/your/crate" }
 ```
 
