@@ -63,7 +63,7 @@ $ ./target/debug/fuzzed
 ## Updating libfuzzer from upstream
 
 ```
-./update-libfuzzer.sh <llvm/compiler-rt SHA1>
+./update-libfuzzer.sh <github.com/llvm-mirror/llvm-project SHA1>
 ```
 
 ## License
