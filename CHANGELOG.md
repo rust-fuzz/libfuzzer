@@ -28,6 +28,23 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.3.3
+
+Released 2020-07-27.
+
+### Changed
+
+* Upgraded libfuzzer to commit
+  [4a4cafa](https://github.com/llvm/llvm-project/commit/4a4cafabc9067fced5890a245b03ef5897ad988b).
+
+  Notably, this pulls in [the new Entropic engine for
+  libFuzzer](https://mboehme.github.io/paper/FSE20.Entropy.pdf), which should
+  boost fuzzing efficiency when enabled. You can enable Entropic by passing
+  `-entropic=1` to your built fuzz targets (although, note that it is still
+  labeled "experimental").
+
+--------------------------------------------------------------------------------
+
 ## 0.3.2
 
 Released 2020-03-18.
