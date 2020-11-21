@@ -10,7 +10,7 @@ cargo rustc \
       --release \
       -- \
       -Cpasses='sancov' \
-      -Cllvm-args=-sanitizer-coverage-level=4 \
+      -Cllvm-args=-sanitizer-coverage-level=3 \
       -Cllvm-args=-sanitizer-coverage-trace-compares \
       -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
       -Cllvm-args=-sanitizer-coverage-stack-depth \
@@ -25,7 +25,7 @@ cargo rustc \
       --release \
       -- \
       -Cpasses='sancov' \
-      -Cllvm-args=-sanitizer-coverage-level=4 \
+      -Cllvm-args=-sanitizer-coverage-level=3 \
       -Cllvm-args=-sanitizer-coverage-trace-compares \
       -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
       -Cllvm-args=-sanitizer-coverage-stack-depth \
