@@ -15,4 +15,8 @@ arbitrary = "0.4.6"
 cc = "1.0"
 
 [features]
+default = []
 arbitrary-derive = ["arbitrary/derive"]
+# Define the `main` entrypoint in this library. If not specified, the entrypoint is still available
+# as libfuzzer_main
+entrypoint = []
