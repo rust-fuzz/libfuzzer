@@ -6,10 +6,10 @@ license = "MIT/Apache-2.0/NCSA"
 name = "libfuzzer-sys"
 readme = "./README.md"
 repository = "https://github.com/rust-fuzz/libfuzzer"
-version = "0.3.5"
+version = "0.4.0"
 
 [dependencies]
-arbitrary = "0.4.6"
+arbitrary = "1"
 
 [build-dependencies]
 cc = "1.0"
