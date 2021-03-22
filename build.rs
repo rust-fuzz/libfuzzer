@@ -17,14 +17,22 @@ fn main() {
         }
     } else {
         let mut build = cc::Build::new();
+        let want_entrypoint = std::env::var_os("CARGO_CFG_ENTRYPOINT").is_some();
+
         let sources = ::std::fs::read_dir("libfuzzer")
             .expect("listable source directory")
-            .map(|de| de.expect("file in directory").path())
-            .filter(|p| p.extension().map(|ext| ext == "cpp") == Some(true))
-            .collect::<Vec<_>>();
-        for source in sources.iter() {
+            .filter_map(|de| {
+                let path = de.expect("directory entry").path();
+                let is_cpp = path.extension().map(|ext| ext == "cpp").unwrap_or_default();
+                let is_entrypoint = path
+                    .file_name()
+                    .map(|fname| fname == "FuzzerMain.cpp")
+                    .unwrap_or_default();
+                Some(path).filter(|_| is_cpp && (want_entrypoint || !is_entrypoint))
+            });
+        for source in sources {
             println!("cargo:rerun-if-changed={}", source.display());
-            build.file(source.to_str().unwrap());
+            build.file(source);
         }
         build.flag("-std=c++11");
         build.flag("-fno-omit-frame-pointer");

@@ -10,28 +10,28 @@
 //! libFuzzer to exercise.
 
 #![deny(missing_docs, missing_debug_implementations)]
+use std::os::unix::ffi::OsStrExt;
+use std::os::raw::{c_int, c_char};
 
 pub use arbitrary;
 
+#[link(name="fuzzer", kind="static")]
 extern "C" {
-    // We do not actually cross the FFI bound here.
-    #[allow(improper_ctypes)]
-    fn rust_fuzzer_test_input(input: &[u8]);
+    fn LLVMFuzzerRunDriver(
+        argc: *mut c_int,
+        argv: *mut *mut *mut c_char,
+        cb: unsafe extern fn(data: *const u8, size: usize) -> c_int
+    ) -> c_int;
 }
 
 #[doc(hidden)]
-#[export_name = "LLVMFuzzerTestOneInput"]
-pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
-    let test_input = ::std::panic::catch_unwind(|| unsafe {
-        let data_slice = ::std::slice::from_raw_parts(data, size);
-        rust_fuzzer_test_input(data_slice);
-    });
-    if test_input.err().is_some() {
-        // hopefully the custom panic hook will be called before and abort the
-        // process before the stack frames are unwinded.
-        ::std::process::abort();
+pub fn test_case(body: unsafe extern fn(*const u8, usize) -> c_int) {
+    let args_os = std::env::args_os();
+    let mut len = args_os.len() as _;
+    let mut args: Vec<*mut c_char> = args_os.map(|arg| arg.as_bytes().as_ptr() as *mut _).collect();
+    unsafe {
+        std::process::exit(LLVMFuzzerRunDriver(&mut len, &mut args.as_mut_ptr(), body) as _);
     }
-    0
 }
 
 #[doc(hidden)]
@@ -116,21 +116,34 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 #[macro_export]
 macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input($bytes: &[u8]) {
+        unsafe extern fn test_body(data: *const u8, size: usize) -> ::std::os::raw::c_int {
+            let $bytes = unsafe {
+                // SAFE: We expect libfuzzer to be well formed and call this with
+                // dereferenceable `data` and accurate `size`.
+                ::std::slice::from_raw_parts(data, size)
+            };
+
             // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
             // formatting of the input to that file. This is only intended for
             // `cargo fuzz`'s use!
-            if let Ok(path) = std::env::var("RUST_LIBFUZZER_DEBUG_PATH") {
-                use std::io::Write;
-                let mut file = std::fs::File::create(path)
+            if let Ok(path) = ::std::env::var("RUST_LIBFUZZER_DEBUG_PATH") {
+                use ::std::io::Write;
+                let mut file = ::std::fs::File::create(path)
                     .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
-                writeln!(&mut file, "{:?}", $bytes)
+                ::std::writeln!(&mut file, "{:?}", $bytes)
                     .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
-                return;
+                return 0;
             }
+            if ::std::panic::catch_unwind(|| $body).is_err() {
+                // hopefully the custom panic hook will be called before and abort the
+                // process before the stack frames are unwinded.
+                ::std::process::abort();
+            }
+            0
+        }
 
-            $body
+        fn main() {
+            $crate::test_case(test_body)
         }
     };
 
@@ -139,9 +152,13 @@ macro_rules! fuzz_target {
     };
 
     (|$data:ident: $dty: ty| $body:block) => {
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
+        unsafe extern fn test_body(data: *const u8, size: usize) -> ::std::os::raw::c_int {
             use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
+            let bytes = unsafe {
+                // SAFE: We expect libfuzzer to be well formed and call this with
+                // dereferenceable `data` and accurate `size`.
+                ::std::slice::from_raw_parts(data, size)
+            };
 
             // Early exit if we don't have enough bytes for the `Arbitrary`
             // implementation. This helps the fuzzer avoid exploring all the
@@ -150,7 +167,7 @@ macro_rules! fuzz_target {
             // get to longer inputs that actually lead to interesting executions
             // quicker.
             if bytes.len() < <$dty as Arbitrary>::size_hint(0).0 {
-                return;
+                return 0;
             }
 
             let mut u = Unstructured::new(bytes);
@@ -175,8 +192,16 @@ macro_rules! fuzz_target {
                 Ok(d) => d,
                 Err(_) => return,
             };
+            if ::std::panic::catch_unwind(|| $body).is_err() {
+                // hopefully the custom panic hook will be called before and abort the
+                // process before the stack frames are unwinded.
+                ::std::process::abort();
+            }
+            0
+        }
 
-            $body
+        fn main() {
+            $crate::test_case(test_body);
         }
     };
 }
