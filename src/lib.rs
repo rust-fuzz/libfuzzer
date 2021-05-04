@@ -116,6 +116,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 #[macro_export]
 macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
+        /// Auto-generated function
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input($bytes: &[u8]) {
             // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
