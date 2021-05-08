@@ -140,6 +140,7 @@ macro_rules! fuzz_target {
     };
 
     (|$data:ident: $dty: ty| $body:block) => {
+        /// Auto-generated function
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
             use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
