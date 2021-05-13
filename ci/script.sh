@@ -39,3 +39,18 @@ RUST_LIBFUZZER_DEBUG_PATH=$(pwd)/debug_output \
 cat $(pwd)/debug_output
 grep -q Rgb $(pwd)/debug_output
 popd
+
+pushd ./example_mutator
+cargo rustc \
+      --release \
+      -- \
+      -Cpasses='sancov' \
+      -Cllvm-args=-sanitizer-coverage-level=3 \
+      -Cllvm-args=-sanitizer-coverage-trace-compares \
+      -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
+      -Cllvm-args=-sanitizer-coverage-stack-depth \
+      -Cllvm-args=-sanitizer-coverage-trace-geps \
+      -Cllvm-args=-sanitizer-coverage-prune-blocks=0 \
+      -Zsanitizer=address
+(! $CARGO_TARGET_DIR/release/example_mutator -runs=10000000)
+popd

@@ -21,4 +21,9 @@ arbitrary-derive = ["arbitrary/derive"]
 members = [
   "./example",
   "./example_arbitrary",
+  "./example_mutator",
 ]
+
+[dev-dependencies]
+flate2 = "1.0.20"
+rand = "0.8.3"
