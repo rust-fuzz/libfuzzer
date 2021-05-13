@@ -28,6 +28,33 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.4.1
+
+Released 2020-05-13.
+
+### Added
+
+* Added support for defining custom mutators. See [the documentation for the
+  `fuzz_mutator!`
+  macro](https://docs.rs/libfuzzer-sys/0.4.1/libfuzzer_sys/macro.fuzz_mutator.html)
+  for details.
+
+### Changed
+
+* Upgraded libfuzzer to llvm/llvm-project's 70cbc6d.
+
+--------------------------------------------------------------------------------
+
+## 0.4.0
+
+Released 2021-02-24.
+
+### Changed
+
+* The public `arbitrary` dependency was updated to version 1.0.
+
+--------------------------------------------------------------------------------
+
 ## 0.3.5
 
 Released 2020-11-18.
