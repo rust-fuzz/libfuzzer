@@ -84,8 +84,9 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 /// ```no_run
 /// #![no_main]
+/// # mod foo {
 ///
-/// use libfuzzer_sys::{arbitrary::{Arbitrary, Unstructured}, fuzz_target};
+/// use libfuzzer_sys::{arbitrary::{Arbitrary, Error, Unstructured}, fuzz_target};
 ///
 /// #[derive(Debug)]
 /// pub struct Rgb {
@@ -94,11 +95,8 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///     b: u8,
 /// }
 ///
-/// impl Arbitrary for Rgb {
-///     fn arbitrary<U>(raw: &mut U) -> Result<Self, U::Error>
-///     where
-///         U: Unstructured + ?Sized
-///     {
+/// impl<'a> Arbitrary<'a> for Rgb {
+///     fn arbitrary(raw: &mut Unstructured<'a>) -> Result<Self, Error> {
 ///         let mut buf = [0; 3];
 ///         raw.fill_buffer(&mut buf)?;
 ///         let r = buf[0];
@@ -112,7 +110,12 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// fuzz_target!(|color: Rgb| {
 ///     my_crate::convert_color(color);
 /// });
-/// # mod my_crate { fn convert_color(_: super::Rgb) {} }
+/// # mod my_crate {
+/// #     use super::Rgb;
+/// #     pub fn convert_color(_: Rgb) {}
+/// # }
+/// # }
+/// ```
 #[macro_export]
 macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
