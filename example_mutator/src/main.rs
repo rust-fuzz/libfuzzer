@@ -24,7 +24,7 @@ fuzz_mutator!(
         let len = decompressed.len();
         let cap = decompressed.capacity();
         decompressed.resize(cap, 0);
-        let new_decompressed_size = libfuzzer_sys::fuzzer_mutate(&mut decompressed, len);
+        let new_decompressed_size = libfuzzer_sys::fuzzer_mutate(&mut decompressed, len, cap);
 
         // Recompress the mutated data.
         let compressed = compress(&decompressed[..new_decompressed_size]);

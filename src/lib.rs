@@ -285,7 +285,7 @@ macro_rules! fuzz_target {
 ///         let len = decompressed.len();
 ///         let cap = decompressed.capacity();
 ///         decompressed.resize(cap, 0);
-///         let new_decompressed_size = libfuzzer_sys::fuzzer_mutate(&mut decompressed, len);
+///         let new_decompressed_size = libfuzzer_sys::fuzzer_mutate(&mut decompressed, len, cap);
 ///
 ///         // Recompress the mutated data.
 ///         let compressed = compress(&decompressed[..new_decompressed_size]);
@@ -374,25 +374,37 @@ macro_rules! fuzz_mutator {
 /// You generally don't have to use this at all unless you're defining a
 /// custom mutator with [the `fuzz_mutator!` macro][crate::fuzz_mutator].
 ///
-/// Mutates `data[..size]` in place and returns the new size of the mutated
-/// data.
+/// Mutates `data[..size]` in place such that the mutated data is no larger than
+/// `max_size` and returns the new size of the mutated data.
+///
+/// To only allow shrinking mutations, make `max_size < size`.
+///
+/// To additionally allow mutations that grow the size of the data, make
+/// `max_size > size`.
+///
+/// Both `size` and `max_size` must be less than or equal to `data.len()`.
 ///
 /// # Example
 ///
 /// ```no_run
 /// // Create some data in a buffer.
 /// let mut data = vec![0; 128];
-/// data[..5].copy_from_slice(b"hello");
+/// data[..b"hello".len()].copy_from_slice(b"hello");
 ///
-/// // Ask `libFuzzer` to mutate the data.
-/// let new_size = libfuzzer_sys::fuzzer_mutate(&mut data, 5);
+/// // Ask `libFuzzer` to mutate the data. By setting `max_size` to our buffer's
+/// // full length, we are allowing `libFuzzer` to perform mutations that grow
+/// // the size of the data, such as insertions.
+/// let size = b"hello".len();
+/// let max_size = data.len();
+/// let new_size = libfuzzer_sys::fuzzer_mutate(&mut data, size, max_size);
 ///
 /// // Get the mutated data out of the buffer.
 /// let mutated_data = &data[..new_size];
 /// ```
-pub fn fuzzer_mutate(data: &mut [u8], size: usize) -> usize {
+pub fn fuzzer_mutate(data: &mut [u8], size: usize, max_size: usize) -> usize {
     assert!(size <= data.len());
-    let new_size = unsafe { LLVMFuzzerMutate(data.as_mut_ptr(), size, data.len()) };
+    assert!(max_size <= data.len());
+    let new_size = unsafe { LLVMFuzzerMutate(data.as_mut_ptr(), size, max_size) };
     assert!(new_size <= data.len());
     new_size
 }
