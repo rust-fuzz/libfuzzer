@@ -5,6 +5,8 @@ cd $(dirname $0)/..
 
 export CARGO_TARGET_DIR=$(pwd)/target
 
+cargo test --doc
+
 pushd ./example
 cargo rustc \
       --release \
