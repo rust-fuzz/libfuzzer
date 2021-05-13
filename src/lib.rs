@@ -116,6 +116,9 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// # }
 /// # }
 /// ```
+///
+/// You can also enable the `arbitrary` crate's custom derive via this crate's
+/// `"arbitrary-derive"` cargo feature.
 #[macro_export]
 macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
