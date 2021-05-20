@@ -165,7 +165,7 @@ macro_rules! fuzz_target {
         /// Auto-generated function
         #[no_mangle]
         pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use libfuzzer_sys::arbitrary::{Arbitrary, Unstructured};
+            use $crate::arbitrary::{Arbitrary, Unstructured};
 
             // Early exit if we don't have enough bytes for the `Arbitrary`
             // implementation. This helps the fuzzer avoid exploring all the
