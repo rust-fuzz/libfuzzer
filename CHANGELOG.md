@@ -28,6 +28,19 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.4.2
+
+Released 2020-05-26.
+
+### Changed
+
+* Improved performance of checking for whether `cargo fuzz` is requesting the
+  `std::fmt::Debug` output of an input or not. This is always false during
+  regular fuzzing, so making this check faster should give slightly better
+  fuzzing throughput.
+
+--------------------------------------------------------------------------------
+
 ## 0.4.1
 
 Released 2020-05-13.
