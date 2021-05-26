@@ -56,3 +56,5 @@ cargo rustc \
       -Zsanitizer=address
 (! $CARGO_TARGET_DIR/release/example_mutator -runs=10000000)
 popd
+
+echo "All good!"
