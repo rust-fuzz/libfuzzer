@@ -158,7 +158,7 @@ macro_rules! fuzz_target {
     };
 
     (|$data:ident: &[u8]| $body:block) => {
-        fuzz_target!(|$data| $body);
+        $crate::fuzz_target!(|$data| $body);
     };
 
     (|$data:ident: $dty: ty| $body:block) => {
