@@ -3,7 +3,7 @@
 use libfuzzer_sys::fuzz_target;
 
 fuzz_target!(|data: &[u8]| {
-    if data == b"banana!" {
+    if data == "banana!".as_bytes() {
         panic!("success!");
     }
 });
