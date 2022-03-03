@@ -28,6 +28,23 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.4.3
+
+Released 2020-03-03.
+
+### Changed
+
+* Updated to `libFuzzer` commit `60e32a1`.
+
+### Fixed
+
+* Fixed an issue where the `fuzz_target!` macro would sometimes expand to
+  versions of itself that were not `$crate` prefixed and would result in "error:
+  cannot find macro `fuzz_target` in this scope" if the caller didn't import the
+  macro but used the qualified version of it instead.
+
+--------------------------------------------------------------------------------
+
 ## 0.4.2
 
 Released 2020-05-26.
