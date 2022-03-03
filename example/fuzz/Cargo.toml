@@ -1,0 +1,16 @@
+[package]
+name = "example-fuzz"
+version = "0.1.0"
+authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = { path = "../.." }
+example = { path = ".." }
+
+[[bin]]
+name = "bananas"
+path = "fuzz_targets/bananas.rs"

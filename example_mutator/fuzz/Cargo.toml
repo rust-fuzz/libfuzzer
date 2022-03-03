@@ -1,0 +1,16 @@
+[package]
+name = "example_mutator_fuzz"
+version = "0.1.0"
+authors = ["Nick Fitzgerald <fitzgen@gmail.com>"]
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+flate2 = "1.0.20"
+libfuzzer-sys = { path = "../.." }
+
+[[bin]]
+name = "boom"
+path = "fuzz_targets/boom.rs"
