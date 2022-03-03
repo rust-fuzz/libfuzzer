@@ -11,7 +11,8 @@ pushd ./example
 cargo rustc \
       --release \
       -- \
-      -Cpasses='sancov' \
+      -Ccodegen-units=1 \
+      -Cpasses=sancov-module \
       -Cllvm-args=-sanitizer-coverage-level=3 \
       -Cllvm-args=-sanitizer-coverage-trace-compares \
       -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
@@ -26,7 +27,8 @@ pushd ./example_arbitrary
 cargo rustc \
       --release \
       -- \
-      -Cpasses='sancov' \
+      -Ccodegen-units=1 \
+      -Cpasses=sancov-module \
       -Cllvm-args=-sanitizer-coverage-level=3 \
       -Cllvm-args=-sanitizer-coverage-trace-compares \
       -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
@@ -46,7 +48,8 @@ pushd ./example_mutator
 cargo rustc \
       --release \
       -- \
-      -Cpasses='sancov' \
+      -Ccodegen-units=1 \
+      -Cpasses=sancov-module \
       -Cllvm-args=-sanitizer-coverage-level=3 \
       -Cllvm-args=-sanitizer-coverage-trace-compares \
       -Cllvm-args=-sanitizer-coverage-inline-8bit-counters \
