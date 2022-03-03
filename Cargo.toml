@@ -20,9 +20,9 @@ arbitrary-derive = ["arbitrary/derive"]
 
 [workspace]
 members = [
-  "./example",
-  "./example_arbitrary",
-  "./example_mutator",
+  "./example/fuzz",
+  "./example_arbitrary/fuzz",
+  "./example_mutator/fuzz",
 ]
 
 [dev-dependencies]

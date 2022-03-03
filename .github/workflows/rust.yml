@@ -20,5 +20,7 @@ jobs:
         rustup component add rustfmt --toolchain stable
         cargo +stable fmt --all -- --check
 
+    - run: cargo install cargo-fuzz
+
     - name: Run tests
       run: ./ci/script.sh

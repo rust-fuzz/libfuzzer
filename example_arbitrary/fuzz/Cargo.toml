@@ -1,0 +1,16 @@
+[package]
+name = "example_arbitrary_fuzz"
+version = "0.1.0"
+authors = ["Simonas Kazlauskas <git@kazlauskas.me>"]
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = { path = "../..", features = ["arbitrary-derive"] }
+example_arbitrary = { path = ".." }
+
+[[bin]]
+name = "rgb"
+path = "fuzz_targets/rgb.rs"
