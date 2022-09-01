@@ -26,7 +26,7 @@ fn main() {
             println!("cargo:rerun-if-changed={}", source.display());
             build.file(source.to_str().unwrap());
         }
-        build.flag("-std=c++11");
+        build.flag("-std=c++17");
         build.flag("-fno-omit-frame-pointer");
         build.flag("-w");
         build.cpp(true);
