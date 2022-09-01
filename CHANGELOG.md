@@ -8,14 +8,7 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* Updated to `libFuzzer` commit `df90d22` (`release/15.x`).
-* LLVM 16's [upcoming change][llvm_cxx17] to build requirements to C++17
-  necessitate reflecting those changes. (`libFuzzer` updates contain C++14 code)
-* Drastically reduce build times by using parallel C++ compilation jobs
-* Updated `rand` dependency from 0.8.3 to 0.8.5
-* Updated `flate2` dependency from 1.0.20 to 1.0.24
-
-[llvm_cxx17]: https://llvm.org/docs/ReleaseNotes.html#update-on-required-toolchains-to-build-llvm
+* TODO (or remove section if none)
 
 ### Deprecated
 
@@ -32,6 +25,23 @@ Released YYYY-MM-DD.
 ### Security
 
 * TODO (or remove section if none)
+
+--------------------------------------------------------------------------------
+
+## 0.4.4
+
+Released 2022-09-01.
+
+### Changed
+
+* Updated to `libFuzzer` commit `df90d22` (`release/15.x`).
+* LLVM 16's [upcoming change][llvm_cxx17] to build requirements to C++17
+  necessitate reflecting those changes. (`libFuzzer` updates contain C++14 code)
+* Drastically reduce build times by using parallel C++ compilation jobs
+* Updated `rand` dependency from 0.8.3 to 0.8.5
+* Updated `flate2` dependency from 1.0.20 to 1.0.24
+
+[llvm_cxx17]: https://llvm.org/docs/ReleaseNotes.html#update-on-required-toolchains-to-build-llvm
 
 --------------------------------------------------------------------------------
 
