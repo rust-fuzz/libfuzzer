@@ -136,25 +136,44 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 #[macro_export]
 macro_rules! fuzz_target {
     (|$bytes:ident| $body:block) => {
-        /// Auto-generated function
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input($bytes: &[u8]) {
-            // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
-            // formatting of the input to that file. This is only intended for
-            // `cargo fuzz`'s use!
+        const _: () = {
+            /// Auto-generated function
+            #[no_mangle]
+            pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
+                // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
+                // formatting of the input to that file. This is only intended for
+                // `cargo fuzz`'s use!
 
-            // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
-            if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
-                use std::io::Write;
-                let mut file = std::fs::File::create(path)
-                    .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
-                writeln!(&mut file, "{:?}", $bytes)
-                    .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
-                return;
+                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
+                if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
+                    use std::io::Write;
+                    let mut file = std::fs::File::create(path)
+                        .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    writeln!(&mut file, "{:?}", bytes)
+                        .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    return;
+                }
+
+                run(bytes)
             }
 
-            $body
-        }
+            // Split out the actual fuzzer into a separate function which is
+            // tagged as never being inlined. This ensures that if the fuzzer
+            // panics there's at least one stack frame which is named uniquely
+            // according to this specific fuzzer that this is embedded within.
+            //
+            // Systems like oss-fuzz try to deduplicate crashes and without this
+            // panics in separate fuzzers can accidentally appear the same
+            // because each fuzzer will have a function called
+            // `rust_fuzzer_test_input`. By using a normal Rust function here
+            // it's named something like `the_fuzzer_name::_::run` which should
+            // ideally help prevent oss-fuzz from deduplicate fuzz bugs across
+            // distinct targets accidentally.
+            #[inline(never)]
+            fn run($bytes: &[u8]) {
+                $body
+            }
+        };
     };
 
     (|$data:ident: &[u8]| $body:block) => {
@@ -162,48 +181,56 @@ macro_rules! fuzz_target {
     };
 
     (|$data:ident: $dty: ty| $body:block) => {
-        /// Auto-generated function
-        #[no_mangle]
-        pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
-            use $crate::arbitrary::{Arbitrary, Unstructured};
+        const _: () = {
+            /// Auto-generated function
+            #[no_mangle]
+            pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) {
+                use $crate::arbitrary::{Arbitrary, Unstructured};
 
-            // Early exit if we don't have enough bytes for the `Arbitrary`
-            // implementation. This helps the fuzzer avoid exploring all the
-            // different not-enough-input-bytes paths inside the `Arbitrary`
-            // implementation. Additionally, it exits faster, letting the fuzzer
-            // get to longer inputs that actually lead to interesting executions
-            // quicker.
-            if bytes.len() < <$dty as Arbitrary>::size_hint(0).0 {
-                return;
+                // Early exit if we don't have enough bytes for the `Arbitrary`
+                // implementation. This helps the fuzzer avoid exploring all the
+                // different not-enough-input-bytes paths inside the `Arbitrary`
+                // implementation. Additionally, it exits faster, letting the fuzzer
+                // get to longer inputs that actually lead to interesting executions
+                // quicker.
+                if bytes.len() < <$dty as Arbitrary>::size_hint(0).0 {
+                    return;
+                }
+
+                let mut u = Unstructured::new(bytes);
+                let data = <$dty as Arbitrary>::arbitrary_take_rest(u);
+
+                // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
+                // formatting of the input to that file. This is only intended for
+                // `cargo fuzz`'s use!
+
+                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
+                if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
+                    use std::io::Write;
+                    let mut file = std::fs::File::create(path)
+                        .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    (match data {
+                        Ok(data) => writeln!(&mut file, "{:#?}", data),
+                        Err(err) => writeln!(&mut file, "Arbitrary Error: {}", err),
+                    })
+                    .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    return;
+                }
+
+                let data = match data {
+                    Ok(d) => d,
+                    Err(_) => return,
+                };
+
+                run(data)
             }
 
-            let mut u = Unstructured::new(bytes);
-            let data = <$dty as Arbitrary>::arbitrary_take_rest(u);
-
-            // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
-            // formatting of the input to that file. This is only intended for
-            // `cargo fuzz`'s use!
-
-            // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
-            if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
-                use std::io::Write;
-                let mut file = std::fs::File::create(path)
-                    .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
-                (match data {
-                    Ok(data) => writeln!(&mut file, "{:#?}", data),
-                    Err(err) => writeln!(&mut file, "Arbitrary Error: {}", err),
-                })
-                .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
-                return;
+            // See above for why this is split to a separate function.
+            #[inline(never)]
+            fn run($data: $dty) {
+                $body
             }
-
-            let $data = match data {
-                Ok(d) => d,
-                Err(_) => return,
-            };
-
-            $body
-        }
+        };
     };
 }
 
