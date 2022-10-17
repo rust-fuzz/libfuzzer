@@ -32,9 +32,13 @@ impl From<()> for Corpus {
     }
 }
 
-impl From<Corpus> for i32 {
-    fn from(value: Corpus) -> i32 {
-        match value {
+impl Corpus {
+    #[doc(hidden)]
+    /// Convert this Corpus result into the [integer codes used by
+    /// `libFuzzer`](https://llvm.org/docs/LibFuzzer.html#rejecting-unwanted-inputs).
+    /// This is -1 for reject, 0 for keep.
+    pub fn to_libfuzzer_code(self) -> i32 {
+        match self {
             Corpus::Keep => 0,
             Corpus::Reject => -1,
         }
@@ -118,8 +122,17 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 /// ## Rejecting Inputs
 ///
-/// To indicate whether an input should be kept in or rejected from the corpus,
-/// return a [Corpus] value from your fuzz target. For example:
+/// It may be desirable to reject some inputs, i.e. to not add them to the
+/// corpus.
+///
+/// For example, when fuzzing an API consisting of parsing and other logic,
+/// one may want to allow only those inputs into the corpus that parse
+/// successfully. To indicate whether an input should be kept in or rejected
+/// from the corpus, return either [Corpus::Keep] or [Corpus::Reject] from your
+/// fuzz target. The default behavior (e.g. if `()` is returned) is to keep the
+/// input in the corpus.
+/// 
+/// For example:
 ///
 /// ```no_run
 /// #![no_main]
@@ -134,7 +147,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 ///     let key = parts[0];
 ///     let value = parts[1];
-///     my_crate::parse(key, value);
+///     let _result: Result<_, _> = my_crate::parse(key, value);
 ///     Corpus::Keep
 /// );
 /// # mod my_crate { pub fn parse(_key: &str, _value: &str) -> Result<(), ()> { unimplemented!() } }
@@ -281,8 +294,8 @@ macro_rules! fuzz_target {
                     Err(_) => return -1,
                 };
 
-                let result: i32 = ::libfuzzer_sys::Corpus::from(run(data)).into();
-                result
+                let result = ::libfuzzer_sys::Corpus::from(run(data));
+                result.to_libfuzzer_code()
             }
 
             // See above for why this is split to a separate function.
