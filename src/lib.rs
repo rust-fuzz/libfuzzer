@@ -149,7 +149,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///     let value = parts[1];
 ///     let _result: Result<_, _> = my_crate::parse(key, value);
 ///     Corpus::Keep
-/// );
+/// });
 /// # mod my_crate { pub fn parse(_key: &str, _value: &str) -> Result<(), ()> { unimplemented!() } }
 /// ```
 ///
@@ -218,7 +218,7 @@ macro_rules! fuzz_target {
                         .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
                     writeln!(&mut file, "{:?}", bytes)
                         .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
-                    return;
+                    return 0;
                 }
 
                 run(bytes);
