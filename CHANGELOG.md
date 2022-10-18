@@ -28,6 +28,24 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.4.5
+
+Released 2022-10-18.
+
+### Added
+
+* Added the ability to tell libfuzzer whether to keep files inputs in the corpus
+  or not. See the `Corpus` type and extended documentation for the
+  `fuzz_target!` macro for details.
+
+### Changed
+
+* Ensured that there is always at least one inline-never frame on the stack per
+  fuzz target. This helps prevent oss-fuzz from "deduplicating" different bugs
+  from different fuzz targets into the same bug.
+
+--------------------------------------------------------------------------------
+
 ## 0.4.4
 
 Released 2022-09-01.
