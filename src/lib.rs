@@ -131,7 +131,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// from the corpus, return either [Corpus::Keep] or [Corpus::Reject] from your
 /// fuzz target. The default behavior (e.g. if `()` is returned) is to keep the
 /// input in the corpus.
-/// 
+///
 /// For example:
 ///
 /// ```no_run
