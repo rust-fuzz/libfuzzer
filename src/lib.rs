@@ -221,7 +221,7 @@ macro_rules! fuzz_target {
                     return 0;
                 }
 
-                run(bytes);
+                __libfuzzer_sys_run(bytes);
                 0
             }
 
@@ -234,11 +234,11 @@ macro_rules! fuzz_target {
             // panics in separate fuzzers can accidentally appear the same
             // because each fuzzer will have a function called
             // `rust_fuzzer_test_input`. By using a normal Rust function here
-            // it's named something like `the_fuzzer_name::_::run` which should
+            // it's named something like `the_fuzzer_name::_::__libfuzzer_sys_run` which should
             // ideally help prevent oss-fuzz from deduplicate fuzz bugs across
             // distinct targets accidentally.
             #[inline(never)]
-            fn run($bytes: &[u8]) {
+            fn __libfuzzer_sys_run($bytes: &[u8]) {
                 $body
             }
         };
@@ -294,13 +294,13 @@ macro_rules! fuzz_target {
                     Err(_) => return -1,
                 };
 
-                let result = ::libfuzzer_sys::Corpus::from(run(data));
+                let result = ::libfuzzer_sys::Corpus::from(__libfuzzer_sys_run(data));
                 result.to_libfuzzer_code()
             }
 
             // See above for why this is split to a separate function.
             #[inline(never)]
-            fn run($data: $dty) -> $rty {
+            fn __libfuzzer_sys_run($data: $dty) -> $rty {
                 $body
             }
         };
