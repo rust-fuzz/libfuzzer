@@ -1,10 +1,11 @@
 fn main() {
+    println!("cargo:rerun-if-env-changed=CUSTOM_LIBFUZZER_PATH");
     if let Ok(custom) = ::std::env::var("CUSTOM_LIBFUZZER_PATH") {
         let custom_lib_path = ::std::path::PathBuf::from(&custom);
         let custom_lib_dir = custom_lib_path.parent().unwrap().to_string_lossy();
 
         let custom_lib_name = custom_lib_path.file_stem().unwrap().to_string_lossy();
-        let custom_lib_name = custom_lib_name.trim_start_matches("lib");
+        let custom_lib_name = custom_lib_name.strip_prefix("lib").unwrap_or(custom_lib_name.as_ref());
 
         println!("cargo:rustc-link-search=native={}", custom_lib_dir);
         println!("cargo:rustc-link-lib=static={}", custom_lib_name);
