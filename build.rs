@@ -5,7 +5,9 @@ fn main() {
         let custom_lib_dir = custom_lib_path.parent().unwrap().to_string_lossy();
 
         let custom_lib_name = custom_lib_path.file_stem().unwrap().to_string_lossy();
-        let custom_lib_name = custom_lib_name.strip_prefix("lib").unwrap_or(custom_lib_name.as_ref());
+        let custom_lib_name = custom_lib_name
+            .strip_prefix("lib")
+            .unwrap_or(custom_lib_name.as_ref());
 
         println!("cargo:rustc-link-search=native={}", custom_lib_dir);
         println!("cargo:rustc-link-lib=static={}", custom_lib_name);
