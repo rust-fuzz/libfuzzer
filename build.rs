@@ -1,6 +1,8 @@
 fn main() {
     println!("cargo:rerun-if-env-changed=CUSTOM_LIBFUZZER_PATH");
     if let Ok(custom) = ::std::env::var("CUSTOM_LIBFUZZER_PATH") {
+        println!("cargo:rerun-if-changed={custom}");
+
         let custom_lib_path = ::std::path::PathBuf::from(&custom);
         let custom_lib_dir = custom_lib_path.parent().unwrap().to_string_lossy();
 
