@@ -61,6 +61,29 @@ And finally, run the fuzzer:
 $ ./target/debug/fuzzed
 ```
 
+### Linking to a local libfuzzer
+
+When using `libfuzzer-sys`, you can provide your own `libfuzzer` runtime in two ways.
+
+If you are developing a fuzzer, you can set the `CUSTOM_LIBFUZZER_PATH` environment variable to the path of your local
+`libfuzzer` runtime, which will then be linked instead of building libfuzzer as part of the build stage of `libfuzzer-sys`.
+For an example, to link to a prebuilt LLVM 16 `libfuzzer`, you could use:
+
+```bash
+$ export CUSTOM_LIBFUZZER_PATH=/usr/lib64/clang/16/lib/libclang_rt.fuzzer-x86_64.a
+$ cargo fuzz run ...
+```
+
+Alternatively, you may also disable the default `link_libfuzzer` feature:
+
+In `Cargo.toml`:
+```toml
+[dependencies]
+libfuzzer-sys = { path = "../../libfuzzer", default-features = false }
+```
+
+Then link to your own runtime in your `build.rs`.
+
 ## Updating libfuzzer from upstream
 
 ```

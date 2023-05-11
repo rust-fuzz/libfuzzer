@@ -1,4 +1,4 @@
-fn main() {
+fn build_and_link_libfuzzer() {
     println!("cargo:rerun-if-env-changed=CUSTOM_LIBFUZZER_PATH");
     if let Ok(custom) = ::std::env::var("CUSTOM_LIBFUZZER_PATH") {
         println!("cargo:rerun-if-changed={custom}");
@@ -36,5 +36,11 @@ fn main() {
         build.flag("-w");
         build.cpp(true);
         build.compile("libfuzzer.a");
+    }
+}
+
+fn main() {
+    if cfg!(feature = "link_libfuzzer") {
+        build_and_link_libfuzzer();
     }
 }
