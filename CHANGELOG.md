@@ -28,6 +28,19 @@ Released YYYY-MM-DD.
 
 --------------------------------------------------------------------------------
 
+## 0.4.7
+
+Released 2023-08-10.
+
+### Added
+
+* Added the `link_libfuzzer` cargo feature. This feature is on by default and
+  preserves the existing behavior of statically linking libfuzzer. You can
+  disable it if you are linking your own version of libfuzzer some other way, or
+  another library that provides the same ABI as libfuzzer.
+
+--------------------------------------------------------------------------------
+
 ## 0.4.6
 
 Released 2023-01-26.
