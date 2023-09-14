@@ -53,10 +53,11 @@ extern "C" {
     fn LLVMFuzzerMutate(data: *mut u8, size: usize, max_size: usize) -> usize;
 }
 
+/// Do not use; only for LibFuzzer's consumption.
 #[doc(hidden)]
 #[export_name = "LLVMFuzzerTestOneInput"]
-pub fn test_input_wrap(data: *const u8, size: usize) -> i32 {
-    let test_input = ::std::panic::catch_unwind(|| unsafe {
+pub unsafe fn test_input_wrap(data: *const u8, size: usize) -> i32 {
+    let test_input = ::std::panic::catch_unwind(|| {
         let data_slice = ::std::slice::from_raw_parts(data, size);
         rust_fuzzer_test_input(data_slice)
     });
@@ -459,9 +460,11 @@ macro_rules! fuzz_mutator {
         |
         $body:block
     ) => {
-        /// Auto-generated function.
+        /// Auto-generated function. Do not use; only for LibFuzzer's
+        /// consumption.
         #[export_name = "LLVMFuzzerCustomMutator"]
-        pub fn rust_fuzzer_custom_mutator(
+        #[doc(hidden)]
+        pub unsafe fn rust_fuzzer_custom_mutator(
             $data: *mut u8,
             $size: usize,
             $max_size: usize,
@@ -471,15 +474,26 @@ macro_rules! fuzz_mutator {
             // might be larger or smaller than `max_size`. The `data`'s capacity
             // is the maximum of the two.
             let len = std::cmp::max($max_size, $size);
-            let $data: &mut [u8] = unsafe { std::slice::from_raw_parts_mut($data, len) };
+            let $data: &mut [u8] = std::slice::from_raw_parts_mut($data, len);
 
             // `unsigned int` is generally a `u32`, but not on all targets. Do
             // an infallible (and potentially lossy, but that's okay because it
             // preserves determinism) conversion.
             let $seed = $seed as u32;
 
+            // Define and invoke a new, safe function so that the body doesn't
+            // inherit `unsafe`.
+            fn custom_mutator(
+                $data: &mut [u8],
+                $size: usize,
+                $max_size: usize,
+                $seed: u32,
+            ) -> usize {
+                $body
+            }
+            let new_size = custom_mutator($data, $size, $max_size, $seed);
+
             // Truncate the new size if it is larger than the max.
-            let new_size = { $body };
             std::cmp::min(new_size, $max_size)
         }
     };
