@@ -24,6 +24,7 @@ arbitrary-derive = ["arbitrary/derive"]
 members = [
   "./example/fuzz",
   "./example_arbitrary/fuzz",
+  "./example_crossover/fuzz",
   "./example_mutator/fuzz",
 ]
 

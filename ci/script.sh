@@ -30,4 +30,10 @@ cargo fuzz build  --dev
 (! cargo fuzz run boom -- -runs=10000000)
 popd
 
+pushd ./example_crossover
+cargo fuzz build
+cargo fuzz build  --dev
+(! cargo fuzz run --release boom -- -runs=10000000)
+popd
+
 echo "All good!"
