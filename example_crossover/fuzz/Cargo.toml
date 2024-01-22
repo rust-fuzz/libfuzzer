@@ -1,0 +1,17 @@
+[package]
+name = "example_crossover_fuzz"
+version = "0.1.0"
+authors = ["R. Elliott Childre"]
+edition = "2021"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+rand = "0.8"
+libfuzzer-sys = { path = "../.." }
+example_crossover = { path = ".." }
+
+[[bin]]
+name = "boom"
+path = "fuzz_targets/boom.rs"

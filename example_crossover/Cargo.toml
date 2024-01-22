@@ -1,0 +1,8 @@
+[package]
+name = "example_crossover"
+version = "0.1.0"
+authors = ["R. Elliott Childre"]
+edition = "2021"
+
+[target.'cfg(fuzzing)'.dependencies]
+rand = "0.8"

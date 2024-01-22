@@ -4,7 +4,8 @@ Released YYYY-MM-DD.
 
 ### Added
 
-* TODO (or remove section if none)
+* Bindings to `LLVMFuzzerCustomCrossOver` through the `fuzz_crossover` macro.
+* `example_crossover` using both `fuzz_mutator` and `fuzz_crossover` (adapted from @rigtorp)
 
 ### Changed
 
