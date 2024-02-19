@@ -9,7 +9,7 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* TODO (or remove section if none)
+* Updated to `libFuzzer` commit `3747cde5e84f` (`release/18.x`).
 
 ### Deprecated
 
