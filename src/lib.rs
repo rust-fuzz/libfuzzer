@@ -203,7 +203,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// `"arbitrary-derive"` cargo feature.
 #[macro_export]
 macro_rules! fuzz_target {
-    (|$bytes:ident| $body:expr) => {
+    (|$bytes:pat_param| $body:expr) => {
         const _: () = {
             /// Auto-generated function
             #[no_mangle]
@@ -249,8 +249,16 @@ macro_rules! fuzz_target {
         $crate::fuzz_target!(|$data| $body);
     };
 
+    (|mut $data:ident: &[u8]| $body:expr) => {
+        $crate::fuzz_target!(|mut $data| $body);
+    };
+
     (|$data:ident: $dty:ty| $body:expr) => {
         $crate::fuzz_target!(|$data: $dty| -> () { $body });
+    };
+
+    (|mut $data:ident: $dty:ty| $body:expr) => {
+        $crate::fuzz_target!(|mut $data: $dty| -> () { $body });
     };
 
     (|$data:ident: $dty:ty| -> $rty:ty $body:block) => {
