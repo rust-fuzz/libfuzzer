@@ -12,7 +12,7 @@
 #![deny(missing_docs, missing_debug_implementations)]
 
 pub use arbitrary;
-use once_cell::sync::OnceCell;
+use std::sync::OnceLock;
 
 /// Indicates whether the input should be kept in the corpus or rejected. This
 /// should be returned by your fuzz target. If your fuzz target does not return
@@ -73,7 +73,10 @@ pub unsafe fn test_input_wrap(data: *const u8, size: usize) -> i32 {
 }
 
 #[doc(hidden)]
-pub static RUST_LIBFUZZER_DEBUG_PATH: OnceCell<String> = OnceCell::new();
+pub fn rust_libfuzzer_debug_path() -> &'static Option<String> {
+    static RUST_LIBFUZZER_DEBUG_PATH: OnceLock<Option<String>> = OnceLock::new();
+    RUST_LIBFUZZER_DEBUG_PATH.get_or_init(|| std::env::var("RUST_LIBFUZZER_DEBUG_PATH").ok())
+}
 
 #[doc(hidden)]
 #[export_name = "LLVMFuzzerInitialize"]
@@ -91,14 +94,6 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
         default_hook(panic_info);
         ::std::process::abort();
     }));
-
-    // Initialize the `RUST_LIBFUZZER_DEBUG_PATH` cell with the path so it can be
-    // reused with little overhead.
-    if let Ok(path) = std::env::var("RUST_LIBFUZZER_DEBUG_PATH") {
-        RUST_LIBFUZZER_DEBUG_PATH
-            .set(path)
-            .expect("Since this is initialize it is only called once so can never fail");
-    }
     0
 }
 
@@ -213,7 +208,7 @@ macro_rules! fuzz_target {
                 // `cargo fuzz`'s use!
 
                 // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
-                if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
+                if let Some(path) = $crate::rust_libfuzzer_debug_path() {
                     use std::io::Write;
                     let mut file = std::fs::File::create(path)
                         .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
@@ -278,7 +273,7 @@ macro_rules! fuzz_target {
                 // `cargo fuzz`'s use!
 
                 // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
-                if let Some(path) = $crate::RUST_LIBFUZZER_DEBUG_PATH.get() {
+                if let Some(path) = $crate::rust_libfuzzer_debug_path() {
                     use std::io::Write;
                     let mut file = std::fs::File::create(path)
                         .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
