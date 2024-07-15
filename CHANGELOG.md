@@ -6,6 +6,7 @@ Released YYYY-MM-DD.
 
 * Bindings to `LLVMFuzzerCustomCrossOver` through the `fuzz_crossover` macro.
 * `example_crossover` using both `fuzz_mutator` and `fuzz_crossover` (adapted from @rigtorp)
+* Support for `mut` in the `fuzz_target!` macro.
 
 ### Changed
 
