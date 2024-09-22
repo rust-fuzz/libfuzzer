@@ -10,6 +10,7 @@ Released YYYY-MM-DD.
 ### Changed
 
 * Updated to `libFuzzer` commit `3747cde5e84f` (`release/18.x`).
+* Updated to `libFuzzer` commit `83251a22f623` (`release/19.x`).
 
 ### Deprecated
 
