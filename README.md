@@ -86,12 +86,18 @@ Then link to your own runtime in your `build.rs`.
 
 ## Updating libfuzzer from upstream
 
-```
-./update-libfuzzer.sh <github.com/llvm-mirror/llvm-project SHA1>
-```
+* Update the `COMMIT=...` variable in `./update-libfuzzer.sh` with the new
+  commit hash from [llvm-mirror/llvm-project](github.com/llvm-mirror/llvm-project)
+  that you are vendoring.
+
+* Re-run the script:
+
+  ```
+  $ ./update-libfuzzer.sh <github.com/llvm-mirror/llvm-project SHA1>
+  ```
 
 ## License
 
-All files in `libfuzzer` directory are licensed NCSA.
+All files in the `libfuzzer` directory are licensed NCSA.
 
 Everything else is dual-licensed Apache 2.0 and MIT.
