@@ -625,9 +625,9 @@ pub fn fuzzer_mutate(data: &mut [u8], size: usize, max_size: usize) -> usize {
 /// });
 /// ```
 ///
-/// This example is a minimized version of [Erik Rigtorp's floating point summation fuzzing example][1].
-/// A more detailed version of this experiment can be found in the
-/// `example_crossover` directory.
+/// This example is a minimized version of [Erik Rigtorp's floating point
+/// summation fuzzing example][1]. A more detailed version of this experiment
+/// can be found in the `example_crossover` directory.
 ///
 /// [1]: https://rigtorp.se/fuzzing-floating-point-code/
 #[macro_export]

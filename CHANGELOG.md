@@ -4,12 +4,11 @@ Released YYYY-MM-DD.
 
 ### Added
 
-* Bindings to `LLVMFuzzerCustomCrossOver` through the `fuzz_crossover` macro.
-* `example_crossover` using both `fuzz_mutator` and `fuzz_crossover` (adapted from @rigtorp)
+* TODO (or remove section if none)
 
 ### Changed
 
-* Updated to `libFuzzer` commit `3747cde5e84f` (`release/18.x`).
+* TODO (or remove section if none)
 
 ### Deprecated
 
@@ -26,6 +25,23 @@ Released YYYY-MM-DD.
 ### Security
 
 * TODO (or remove section if none)
+
+--------------------------------------------------------------------------------
+
+## 0.4.8
+
+Released 2024-11-07.
+
+### Added
+
+* Bindings to `LLVMFuzzerCustomCrossOver` through the `fuzz_crossover`
+  macro. See the `example_crossover` directory in this crate's repo for a
+  complete example.
+
+### Changed
+
+* Updated to `libFuzzer` commit `ab51eccf88f5321e7c60591c5546b254b6afab99`
+  (`release/19.x`).
 
 --------------------------------------------------------------------------------
 
