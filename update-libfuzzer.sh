@@ -8,7 +8,7 @@ set -ex
 
 # The LLVM commit from which we are vendoring libfuzzer. This must be a commit
 # hash from https://github.com/llvm/llvm-project
-COMMIT=3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff
+COMMIT=ab51eccf88f5321e7c60591c5546b254b6afab99
 
 cd "$(dirname $0)"
 project_dir="$(pwd)"
