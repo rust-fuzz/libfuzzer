@@ -31,7 +31,19 @@ fn build_and_link_libfuzzer() {
             println!("cargo:rerun-if-changed={}", source.display());
             build.file(source.to_str().unwrap());
         }
-        build.flag("-std=c++17");
+
+        // On Windows, the MSVC compiler has a different flag syntax for setting the C++ version.
+        // If we're building on Windows, use `/std:c++17`. Otherwise, use the Linux-friendly
+        // syntax. See this link for information on the MSVC option:
+        //
+        // https://learn.microsoft.com/en-us/cpp/build/reference/std-specify-language-standard-version
+        if cfg!(target_os = "windows") {
+            build.flag("/std:c++17");
+        }
+        else {
+            build.flag("-std=c++17");
+        }
+
         build.flag("-fno-omit-frame-pointer");
         build.flag("-w");
         build.cpp(true);
