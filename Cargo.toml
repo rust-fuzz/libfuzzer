@@ -12,7 +12,7 @@ version = "0.4.8"
 arbitrary = "1"
 
 [build-dependencies]
-cc = { version = "1.0", features = ["parallel"] }
+cc = { version = "1.0.83", features = ["parallel"] }
 
 [features]
 default = ["link_libfuzzer"]
