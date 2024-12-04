@@ -31,10 +31,10 @@ fn build_and_link_libfuzzer() {
             println!("cargo:rerun-if-changed={}", source.display());
             build.file(source.to_str().unwrap());
         }
-        build.flag("-std=c++17");
-        build.flag("-fno-omit-frame-pointer");
-        build.flag("-w");
         build.cpp(true);
+        build.std("c++17");
+        build.force_frame_pointer(true);
+        build.warnings(false);
         build.compile("libfuzzer.a");
     }
 }
