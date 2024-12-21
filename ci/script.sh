@@ -36,4 +36,10 @@ cargo fuzz build  --dev
 (! cargo fuzz run --release boom -- -runs=10000000)
 popd
 
+pushd ./example_init
+cargo fuzz build
+cargo fuzz build  --dev
+(! cargo fuzz run --release bigbang -- -runs=10000000)
+popd
+
 echo "All good!"

@@ -78,24 +78,11 @@ pub fn rust_libfuzzer_debug_path() -> &'static Option<String> {
     RUST_LIBFUZZER_DEBUG_PATH.get_or_init(|| std::env::var("RUST_LIBFUZZER_DEBUG_PATH").ok())
 }
 
-#[doc(hidden)]
+/* #[doc(hidden)]
 #[export_name = "LLVMFuzzerInitialize"]
 pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
-    // Registers a panic hook that aborts the process before unwinding.
-    // It is useful to abort before unwinding so that the fuzzer will then be
-    // able to analyse the process stack frames to tell different bugs appart.
-    //
-    // HACK / FIXME: it would be better to use `-C panic=abort` but it's currently
-    // impossible to build code using compiler plugins with this flag.
-    // We will be able to remove this code when
-    // https://github.com/rust-lang/cargo/issues/5423 is fixed.
-    let default_hook = ::std::panic::take_hook();
-    ::std::panic::set_hook(Box::new(move |panic_info| {
-        default_hook(panic_info);
-        ::std::process::abort();
-    }));
     0
-}
+} */
 
 /// Define a fuzz target.
 ///
@@ -198,9 +185,31 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// `"arbitrary-derive"` cargo feature.
 #[macro_export]
 macro_rules! fuzz_target {
-    (|$bytes:ident| $body:expr) => {
+    (init: $init:expr, |$bytes:ident| $body:expr) => {
         const _: () = {
-            /// Auto-generated function
+            /// Auto-generated functions
+            /// LLVMFuzzerInitialize is called once before the fuzzer starts.
+            #[no_mangle]
+            pub extern "C" fn LLVMFuzzerInitialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
+                // Registers a panic hook that aborts the process before unwinding.
+                // It is useful to abort before unwinding so that the fuzzer will then be
+                // able to analyse the process stack frames to tell different bugs appart.
+                //
+                // HACK / FIXME: it would be better to use `-C panic=abort` but it's currently
+                // impossible to build code using compiler plugins with this flag.
+                // We will be able to remove this code when
+                // https://github.com/rust-lang/cargo/issues/5423 is fixed.
+                let default_hook = std::panic::take_hook();
+                std::panic::set_hook(Box::new(move |panic_info| {
+                    default_hook(panic_info);
+                    std::process::abort();
+                }));
+
+                // Supplied init code
+                $init;
+                0
+            }
+
             #[no_mangle]
             pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) -> i32 {
                 // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
@@ -241,16 +250,50 @@ macro_rules! fuzz_target {
     };
 
     (|$data:ident: &[u8]| $body:expr) => {
-        $crate::fuzz_target!(|$data| $body);
+        $crate::fuzz_target!(init: (), |$data| $body);
     };
 
     (|$data:ident: $dty:ty| $body:expr) => {
-        $crate::fuzz_target!(|$data: $dty| -> () { $body });
+        $crate::fuzz_target!(init: (), |$data: $dty| -> () { $body });
     };
 
     (|$data:ident: $dty:ty| -> $rty:ty $body:block) => {
+        $crate::fuzz_target!(init: (), |$data: $dty| -> $rty { $body });
+    };
+
+    (init: $init:expr, |$data:ident: &[u8]| $body:expr) => {
+        $crate::fuzz_target!(init: $init, |$data| $body);
+    };
+
+    (init: $init:expr, |$data:ident: $dty:ty| $body:expr) => {
+        $crate::fuzz_target!(init: $init, |$data: $dty| -> () { $body });
+    };
+
+    (init: $init:expr, |$data:ident: $dty:ty| -> $rty:ty $body:block) => {
         const _: () = {
-            /// Auto-generated function
+            /// Auto-generated functions
+            /// LLVMFuzzerInitialize is called once before the fuzzer starts.
+            #[no_mangle]
+            pub extern "C" fn LLVMFuzzerInitialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
+                // Registers a panic hook that aborts the process before unwinding.
+                // It is useful to abort before unwinding so that the fuzzer will then be
+                // able to analyse the process stack frames to tell different bugs appart.
+                //
+                // HACK / FIXME: it would be better to use `-C panic=abort` but it's currently
+                // impossible to build code using compiler plugins with this flag.
+                // We will be able to remove this code when
+                // https://github.com/rust-lang/cargo/issues/5423 is fixed.
+                let default_hook = std::panic::take_hook();
+                std::panic::set_hook(Box::new(move |panic_info| {
+                    default_hook(panic_info);
+                    std::process::abort();
+                }));
+
+                // Supplied init code
+                $init;
+                0
+            }
+
             #[no_mangle]
             pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) -> i32 {
                 use $crate::arbitrary::{Arbitrary, Unstructured};
@@ -271,8 +314,6 @@ macro_rules! fuzz_target {
                 // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
                 // formatting of the input to that file. This is only intended for
                 // `cargo fuzz`'s use!
-
-                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
                 if let Some(path) = $crate::rust_libfuzzer_debug_path() {
                     use std::io::Write;
                     let mut file = std::fs::File::create(path)
@@ -294,7 +335,6 @@ macro_rules! fuzz_target {
                 result.to_libfuzzer_code()
             }
 
-            // See above for why this is split to a separate function.
             #[inline(never)]
             fn __libfuzzer_sys_run($data: $dty) -> $rty {
                 $body
