@@ -303,6 +303,8 @@ macro_rules! fuzz_target {
                 // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
                 // formatting of the input to that file. This is only intended for
                 // `cargo fuzz`'s use!
+
+                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
                 if let Some(path) = $crate::rust_libfuzzer_debug_path() {
                     use std::io::Write;
                     let mut file = std::fs::File::create(path)
@@ -323,7 +325,7 @@ macro_rules! fuzz_target {
                 let result = ::libfuzzer_sys::Corpus::from(__libfuzzer_sys_run(data));
                 result.to_libfuzzer_code()
             }
-
+            // See above for why this is split to a separate function.
             #[inline(never)]
             fn __libfuzzer_sys_run($data: $dty) -> $rty {
                 $body
