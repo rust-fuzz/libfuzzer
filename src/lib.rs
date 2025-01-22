@@ -109,7 +109,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// use libfuzzer_sys::fuzz_target;
 ///
 /// // Note: `|input|` is short for `|input: &[u8]|`.
-/// fuzz_target!(|input| {
+/// fuzz_target!(|input: &[u8]| {
 ///     let _result: Result<_, _> = my_crate::parse(input);
 /// });
 /// # mod my_crate { pub fn parse(_: &[u8]) -> Result<(), ()> { unimplemented!() } }
