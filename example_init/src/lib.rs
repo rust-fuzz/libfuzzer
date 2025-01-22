@@ -12,7 +12,9 @@ pub fn bigbang(data: &[u8]) {
 }
 
 pub fn initialize() {
-    EXTRA_DATA.set("initialized").expect("should only initialize once");
+    EXTRA_DATA
+        .set("initialized")
+        .expect("should only initialize once");
 }
 
 pub fn is_initialized() -> bool {
