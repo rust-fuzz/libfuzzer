@@ -79,7 +79,6 @@ pub fn rust_libfuzzer_debug_path() -> &'static Option<String> {
 }
 
 #[doc(hidden)]
-//#[export_name = "LLVMFuzzerInitialize"]
 pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
     // Registers a panic hook that aborts the process before unwinding.
     // It is useful to abort before unwinding so that the fuzzer will then be
