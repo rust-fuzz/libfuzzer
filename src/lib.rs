@@ -212,7 +212,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 /// fuzz_target!(
 ///     init: {
-/// #       leat read_dictionary = |_| unimplemented!();
+///         let read_dictionary = |_| unimplemented!();
 ///         let dictionary = read_dictionary("/usr/share/dict/words");
 ///         DICTIONARY.set(dictionary).unwrap();
 ///     },
