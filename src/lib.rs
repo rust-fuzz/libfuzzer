@@ -195,6 +195,22 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 /// You can also enable the `arbitrary` crate's custom derive via this crate's
 /// `"arbitrary-derive"` cargo feature.
+/// 
+/// ## Init Code
+/// 
+/// Init code to the fuzz target by using the `init` keyword. This is called once before the fuzzer starts.
+/// Supports short |input| or |input: <type>| syntax.
+/// 
+/// ```no_run
+/// #![no_main]
+/// 
+/// use libfuzzer_sys::fuzz_target;
+/// 
+/// fuzz_target!(init: (), |input| {
+///     // ...
+/// });
+/// ```
+/// 
 #[macro_export]
 macro_rules! fuzz_target {
     (init: $init:expr, |$bytes:ident| $body:expr) => {
@@ -249,6 +265,10 @@ macro_rules! fuzz_target {
         };
     };
 
+    (|$bytes:ident| $body:expr) => {
+        $crate::fuzz_target!(|$bytes: &[u8]| $body);
+    };
+
     (|$data:ident: &[u8]| $body:expr) => {
         $crate::fuzz_target!(init: (), |$data| $body);
     };
@@ -263,6 +283,10 @@ macro_rules! fuzz_target {
 
     (init: $init:expr, |$data:ident: &[u8]| $body:expr) => {
         $crate::fuzz_target!(init: $init, |$data| $body);
+    };
+
+    (init: $init:expr, |$bytes:ident| $body:expr) => {
+        $crate::fuzz_target!(init: $init, |$bytes: &[u8]| $body);
     };
 
     (init: $init:expr, |$data:ident: $dty:ty| $body:expr) => {
