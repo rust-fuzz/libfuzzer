@@ -195,15 +195,15 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 /// You can also enable the `arbitrary` crate's custom derive via this crate's
 /// `"arbitrary-derive"` cargo feature.
-/// 
+///
 /// ## Init Code
-/// 
+///
 /// Init code to the fuzz target by using the `init` keyword. This is called once before the fuzzer starts.
 /// Supports short |input| or |input: <type>| syntax.
-/// 
+///
 /// ```no_run
 /// #![no_main]
-/// 
+///
 /// use libfuzzer_sys::fuzz_target;
 /// use std::collections::HashSet;
 /// use std::sync::OnceLock;
@@ -221,7 +221,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///     }
 /// );
 /// ```
-/// 
+///
 #[macro_export]
 macro_rules! fuzz_target {
     (init: $init:expr, |$bytes:ident| $body:expr) => {
