@@ -205,10 +205,21 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// #![no_main]
 /// 
 /// use libfuzzer_sys::fuzz_target;
-/// 
-/// fuzz_target!(init: (), |input| {
-///     // ...
-/// });
+/// use std::collections::HashSet;
+/// use std::sync::OnceLock;
+///
+/// static DICTIONARY: OnceLock<HashSet<String>> = OnceLock::new();
+///
+/// fuzz_target!(
+///     init: {
+/// #       leat read_dictionary = |_| unimplemented!();
+///         let dictionary = read_dictionary("/usr/share/dict/words");
+///         DICTIONARY.set(dictionary).unwrap();
+///     },
+///     |input| {
+///         // Use the initialized `DICTIONARY` here...
+///     }
+/// );
 /// ```
 /// 
 #[macro_export]
