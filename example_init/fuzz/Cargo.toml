@@ -1,0 +1,16 @@
+[package]
+name = "example_init-fuzz"
+version = "0.1.0"
+authors = ["Andrea Cappa"]
+edition = "2018"
+
+[package.metadata]
+cargo-fuzz = true
+
+[dependencies]
+libfuzzer-sys = { path = "../.." }
+example_init = { path = ".." }
+
+[[bin]]
+name = "bigbang"
+path = "fuzz_targets/bigbang.rs"
