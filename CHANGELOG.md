@@ -30,15 +30,18 @@ Released YYYY-MM-DD.
 
 ## 0.4.9
 
-Released YYYY-MM-DD.
+Released 2025-01-28.
 
 ### Added
 
-* The `example_init` demonstrates how to pass an initialization code block to the `fuzz_target!` macro.
+* The `example_init` demonstrates how to pass an initialization code block to
+  the `fuzz_target!` macro.
 
 ### Changed
 
-* The `fuzz_target!` macro now supports the generation of `LLVMFuzzerInitialize` to execute initialization code once before running the fuzzer. This change is not breaking and is completely backward compatible.
+* The `fuzz_target!` macro now supports the generation of `LLVMFuzzerInitialize`
+  to execute initialization code once before running the fuzzer. This change is
+  not breaking and is completely backward compatible.
 
 --------------------------------------------------------------------------------
 
