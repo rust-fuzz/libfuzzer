@@ -224,7 +224,27 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 ///
 #[macro_export]
 macro_rules! fuzz_target {
+    (|$bytes:ident| $body:expr) => {
+        $crate::fuzz_target!(init: (), |$bytes: &[u8]| -> () { $body });
+    };
+
+    (|$bytes:ident: &[u8]| $body:expr) => {
+        $crate::fuzz_target!(init: (), |$bytes: &[u8]| -> () { $body });
+    };
+
+    (|$bytes:ident: &[u8]| -> $rty:ty $body:block) => {
+        $crate::fuzz_target!(init: (), |$bytes: &[u8]| -> $rty { $body });
+    };
+
     (init: $init:expr, |$bytes:ident| $body:expr) => {
+        $crate::fuzz_target!(init: $init, |$bytes: &[u8]| -> () { $body });
+    };
+
+    (init: $init:expr, |$bytes:ident: &[u8]| $body:expr) => {
+        $crate::fuzz_target!(init: $init, |$bytes: &[u8]| -> () { $body });
+    };
+
+    (init: $init:expr, |$bytes:ident: &[u8]| -> $rty:ty $body:block) => {
         const _: () = {
             /// Auto-generated functions
             /// LLVMFuzzerInitialize is called once before the fuzzer starts.
@@ -253,8 +273,8 @@ macro_rules! fuzz_target {
                     return 0;
                 }
 
-                __libfuzzer_sys_run(bytes);
-                0
+                let result = ::libfuzzer_sys::Corpus::from(__libfuzzer_sys_run(bytes));
+                result.to_libfuzzer_code()
             }
 
             // Split out the actual fuzzer into a separate function which is
@@ -270,18 +290,10 @@ macro_rules! fuzz_target {
             // ideally help prevent oss-fuzz from deduplicate fuzz bugs across
             // distinct targets accidentally.
             #[inline(never)]
-            fn __libfuzzer_sys_run($bytes: &[u8]) {
+            fn __libfuzzer_sys_run($bytes: &[u8]) -> $rty {
                 $body
             }
         };
-    };
-
-    (|$bytes:ident| $body:expr) => {
-        $crate::fuzz_target!(|$bytes: &[u8]| $body);
-    };
-
-    (|$data:ident: &[u8]| $body:expr) => {
-        $crate::fuzz_target!(init: (), |$data| $body);
     };
 
     (|$data:ident: $dty:ty| $body:expr) => {
@@ -290,14 +302,6 @@ macro_rules! fuzz_target {
 
     (|$data:ident: $dty:ty| -> $rty:ty $body:block) => {
         $crate::fuzz_target!(init: (), |$data: $dty| -> $rty { $body });
-    };
-
-    (init: $init:expr, |$data:ident: &[u8]| $body:expr) => {
-        $crate::fuzz_target!(init: $init, |$data| $body);
-    };
-
-    (init: $init:expr, |$bytes:ident| $body:expr) => {
-        $crate::fuzz_target!(init: $init, |$bytes: &[u8]| $body);
     };
 
     (init: $init:expr, |$data:ident: $dty:ty| $body:expr) => {
