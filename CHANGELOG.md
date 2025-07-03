@@ -8,7 +8,7 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* Updated to `libFuzzer` commit `6146a88f6049` (`release/20.x`).
+* TODO (or remove section if none)
 
 ### Deprecated
 
@@ -25,6 +25,17 @@ Released YYYY-MM-DD.
 ### Security
 
 * TODO (or remove section if none)
+
+--------------------------------------------------------------------------------
+
+## 0.4.10
+
+Released 2025-07-03.
+
+### Changed
+
+* Updated to `libFuzzer` commit `6146a88f6049` (`release/20.x`).
+* Fuzz targets taking raw byte slice inputs can now return `Corpus` results.
 
 --------------------------------------------------------------------------------
 
