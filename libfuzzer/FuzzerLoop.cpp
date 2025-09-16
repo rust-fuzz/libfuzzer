@@ -149,7 +149,7 @@ Fuzzer::Fuzzer(UserCallback CB, InputCorpus &Corpus, MutationDispatcher &MD,
   TPC.SetUseCounters(Options.UseCounters);
   TPC.SetUseValueProfileMask(Options.UseValueProfile);
 
-  if (Options.Verbosity)
+  if (Options.Verbosity >= 2)
     TPC.PrintModuleInfo();
   if (!Options.OutputCorpus.empty() && Options.ReloadIntervalSec)
     EpochOfLastReadOfOutputCorpus = GetEpoch(Options.OutputCorpus);
