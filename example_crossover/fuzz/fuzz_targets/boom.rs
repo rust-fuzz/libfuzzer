@@ -2,8 +2,8 @@
 
 use example_crossover::sum;
 use libfuzzer_sys::{fuzz_crossover, fuzz_mutator, fuzz_target};
-use rand::distributions::{Bernoulli, Distribution, Uniform};
-use rand::{rngs::StdRng, seq::SliceRandom, SeedableRng};
+use rand::distr::{Bernoulli, Distribution, Uniform};
+use rand::{rngs::SmallRng, seq::SliceRandom, Rng, SeedableRng};
 use std::mem::size_of;
 
 fuzz_target!(|data: &[u8]| {
@@ -17,8 +17,8 @@ fuzz_target!(|data: &[u8]| {
     );
 });
 
-fn rfp(rng: &mut StdRng) -> f64 {
-    match Uniform::new_inclusive(0, 10).sample(rng) {
+fn rfp<T: Rng>(rng: &mut T) -> f64 {
+    match Uniform::new_inclusive(0, 10).unwrap().sample(rng) {
         0 => f64::NAN,
         1 => f64::MIN,
         2 => f64::MAX,
@@ -29,15 +29,15 @@ fn rfp(rng: &mut StdRng) -> f64 {
         7 => f64::INFINITY,
         8 => f64::NEG_INFINITY,
         9 => 0.0,
-        10 => Uniform::new_inclusive(-1.0, 1.0).sample(rng),
+        10 => Uniform::new_inclusive(-1.0, 1.0).unwrap().sample(rng),
         _ => 0.0,
     }
 }
 
 fuzz_mutator!(|data: &mut [u8], size: usize, max_size: usize, seed: u32| {
-    let mut gen = StdRng::seed_from_u64(seed.into());
+    let mut rng = SmallRng::seed_from_u64(seed.into());
 
-    match Uniform::new_inclusive(0, 3).sample(&mut gen) {
+    match Uniform::new_inclusive(0, 3).unwrap().sample(&mut rng) {
         0 => {
             // "Change [an] element"
 
@@ -45,8 +45,8 @@ fuzz_mutator!(|data: &mut [u8], size: usize, max_size: usize, seed: u32| {
             let (_, floats, _) = unsafe { data[..size].align_to_mut::<f64>() };
 
             if !floats.is_empty() {
-                let d = Uniform::new(0, floats.len());
-                floats[d.sample(&mut gen)] = rfp(&mut gen);
+                let d = Uniform::new(0, floats.len()).unwrap();
+                floats[d.sample(&mut rng)] = rfp(&mut rng);
             }
         }
         1 => {
@@ -58,7 +58,7 @@ fuzz_mutator!(|data: &mut [u8], size: usize, max_size: usize, seed: u32| {
                 let (_, floats, _) = unsafe { data[..plus_one].align_to_mut::<f64>() };
 
                 let last = floats.last_mut().unwrap();
-                *last = rfp(&mut gen);
+                *last = rfp(&mut rng);
 
                 return plus_one;
             }
@@ -79,7 +79,7 @@ fuzz_mutator!(|data: &mut [u8], size: usize, max_size: usize, seed: u32| {
 
             // Not altering the size, so decode the intended space (i.e. `size`) as floats
             let (_, floats, _) = unsafe { data[..size].align_to_mut::<f64>() };
-            floats.shuffle(&mut gen);
+            floats.shuffle(&mut rng);
         }
         _ => unreachable!(),
     };
@@ -88,7 +88,7 @@ fuzz_mutator!(|data: &mut [u8], size: usize, max_size: usize, seed: u32| {
 });
 
 fuzz_crossover!(|data1: &[u8], data2: &[u8], out: &mut [u8], seed: u32| {
-    let mut gen = StdRng::seed_from_u64(seed.into());
+    let mut rng = SmallRng::seed_from_u64(seed.into());
 
     let bd = Bernoulli::new(0.5).unwrap();
 
@@ -113,7 +113,7 @@ fuzz_crossover!(|data1: &[u8], data2: &[u8], out: &mut [u8], seed: u32| {
     // Put into the destination, floats from either data1 or data2 if the
     // Bernoulli distribution succeeds or fails
     for i in 0..n {
-        out_floats[i] = if bd.sample(&mut gen) {
+        out_floats[i] = if bd.sample(&mut rng) {
             d1_floats[i]
         } else {
             d2_floats[i]

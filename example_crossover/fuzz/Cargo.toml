@@ -8,7 +8,7 @@ edition = "2021"
 cargo-fuzz = true
 
 [dependencies]
-rand = "0.8"
+rand = { version = "0.10", default-features = false }
 libfuzzer-sys = { path = "../.." }
 example_crossover = { path = ".." }
 

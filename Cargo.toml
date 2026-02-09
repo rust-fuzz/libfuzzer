@@ -40,5 +40,5 @@ members = [
 ]
 
 [dev-dependencies]
-flate2 = "1.0.24"
-rand = "0.8.5"
+flate2 = "1.1"
+rand = { version = "0.10", default-features = false }
