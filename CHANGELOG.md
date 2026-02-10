@@ -8,7 +8,11 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* TODO (or remove section if none)
+* Recommend `SmallRng` over `StdRng` in the examples for faster, more lightweight
+  seeding and sampling
+* Updated `rand` dependency from 0.8.5 to 0.10
+* Updated `flate2` dependency from 1.0.24 to 1.1
+* Rename `gen` variable to `rng` for better 2024 Edition compatability
 
 ### Deprecated
 

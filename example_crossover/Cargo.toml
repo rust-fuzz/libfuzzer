@@ -5,4 +5,4 @@ authors = ["R. Elliott Childre"]
 edition = "2021"
 
 [target.'cfg(fuzzing)'.dependencies]
-rand = "0.8"
+rand = { version = "0.10", default-features = false }
