@@ -8,7 +8,7 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* Updated to `libFuzzer` commit `a47b42eb9f9b` (`release/22.x`).
+* TODO (or remove section if none)
 
 ### Deprecated
 
@@ -25,6 +25,16 @@ Released YYYY-MM-DD.
 ### Security
 
 * TODO (or remove section if none)
+
+--------------------------------------------------------------------------------
+
+## 0.4.11
+
+Released 2026-02-10.
+
+### Changed
+
+* Updated to `libFuzzer` commit `a47b42eb9f9b` (`release/22.x`).
 
 --------------------------------------------------------------------------------
 
