@@ -8,7 +8,7 @@ Released YYYY-MM-DD.
 
 ### Changed
 
-* TODO (or remove section if none)
+* Updated to `libFuzzer` commit `a47b42eb9f9b` (`release/22.x`).
 
 ### Deprecated
 
