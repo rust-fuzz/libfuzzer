@@ -10,9 +10,18 @@
 //! libFuzzer to exercise.
 
 #![deny(missing_docs, missing_debug_implementations)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 pub use arbitrary;
-use std::sync::OnceLock;
+use std::{
+    ffi::c_int,
+    path::{Path, PathBuf},
+    sync::OnceLock,
+};
+
+#[cfg(feature = "fuzz_macro")]
+#[doc(hidden)]
+pub mod fuzz_macro;
 
 /// Indicates whether the input should be kept in the corpus or rejected. This
 /// should be returned by your fuzz target. If your fuzz target does not return
@@ -27,6 +36,7 @@ pub enum Corpus {
 }
 
 impl From<()> for Corpus {
+    #[inline]
     fn from(_: ()) -> Self {
         Self::Keep
     }
@@ -37,49 +47,45 @@ impl Corpus {
     /// Convert this Corpus result into the [integer codes used by
     /// `libFuzzer`](https://llvm.org/docs/LibFuzzer.html#rejecting-unwanted-inputs).
     /// This is -1 for reject, 0 for keep.
-    pub fn to_libfuzzer_code(self) -> i32 {
+    #[inline]
+    pub fn into_libfuzzer_code(self) -> c_int {
         match self {
-            Corpus::Keep => 0,
-            Corpus::Reject => -1,
+            Self::Keep => 0,
+            Self::Reject => -1,
         }
     }
 }
 
 extern "C" {
-    // We do not actually cross the FFI bound here.
-    #[allow(improper_ctypes)]
-    fn rust_fuzzer_test_input(input: &[u8]) -> i32;
-
     fn LLVMFuzzerMutate(data: *mut u8, size: usize, max_size: usize) -> usize;
 }
 
-/// Do not use; only for LibFuzzer's consumption.
 #[doc(hidden)]
-#[export_name = "LLVMFuzzerTestOneInput"]
-pub unsafe fn test_input_wrap(data: *const u8, size: usize) -> i32 {
-    let test_input = ::std::panic::catch_unwind(|| {
-        let data_slice = ::std::slice::from_raw_parts(data, size);
-        rust_fuzzer_test_input(data_slice)
-    });
-
-    match test_input {
-        Ok(i) => i,
-        Err(_) => {
-            // hopefully the custom panic hook will be called before and abort the
-            // process before the stack frames are unwinded.
-            ::std::process::abort();
-        }
-    }
+pub fn catch_and_abort<R>(f: impl FnOnce() -> R) -> R {
+    std::panic::catch_unwind(std::panic::AssertUnwindSafe(f))
+        .unwrap_or_else(|_| std::process::abort())
 }
 
 #[doc(hidden)]
-pub fn rust_libfuzzer_debug_path() -> &'static Option<String> {
-    static RUST_LIBFUZZER_DEBUG_PATH: OnceLock<Option<String>> = OnceLock::new();
-    RUST_LIBFUZZER_DEBUG_PATH.get_or_init(|| std::env::var("RUST_LIBFUZZER_DEBUG_PATH").ok())
+#[inline]
+pub fn rust_libfuzzer_debug_path() -> Option<&'static Path> {
+    static RUST_LIBFUZZER_DEBUG_PATH: OnceLock<Option<PathBuf>> = OnceLock::new();
+    RUST_LIBFUZZER_DEBUG_PATH
+        .get_or_init(|| std::env::var_os("RUST_LIBFUZZER_DEBUG_PATH").map(PathBuf::from))
+        .as_deref()
 }
 
 #[doc(hidden)]
-pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
+pub fn write_debug_path(path: &Path, contents: std::fmt::Arguments<'_>) {
+    use std::io::Write;
+
+    let mut file =
+        std::fs::File::create(path).expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
+    writeln!(&mut file, "{contents}").expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+}
+
+#[doc(hidden)]
+pub fn initialize() {
     // Registers a panic hook that aborts the process before unwinding.
     // It is useful to abort before unwinding so that the fuzzer will then be
     // able to analyse the process stack frames to tell different bugs appart.
@@ -93,7 +99,6 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
         default_hook(panic_info);
         std::process::abort();
     }));
-    0
 }
 
 /// Define a fuzz target.
@@ -123,7 +128,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// For example, when fuzzing an API consisting of parsing and other logic,
 /// one may want to allow only those inputs into the corpus that parse
 /// successfully. To indicate whether an input should be kept in or rejected
-/// from the corpus, return either [Corpus::Keep] or [Corpus::Reject] from your
+/// from the corpus, return either [`Corpus::Keep`] or [`Corpus::Reject`] from your
 /// fuzz target. The default behavior (e.g. if `()` is returned) is to keep the
 /// input in the corpus.
 ///
@@ -199,7 +204,7 @@ pub fn initialize(_argc: *const isize, _argv: *const *const *const u8) -> isize 
 /// ## Init Code
 ///
 /// Init code to the fuzz target by using the `init` keyword. This is called once before the fuzzer starts.
-/// Supports short |input| or |input: <type>| syntax.
+/// Supports short `|input|` or `|input: <type>|` syntax.
 ///
 /// ```no_run
 /// #![no_main]
@@ -246,35 +251,40 @@ macro_rules! fuzz_target {
 
     (init: $init:expr, |$bytes:ident: &[u8]| -> $rty:ty $body:block) => {
         const _: () = {
-            /// Auto-generated functions
+            #[no_mangle]
+            pub unsafe extern "C" fn LLVMFuzzerTestOneInput(data: *const u8, size: usize) -> ::std::ffi::c_int {
+                $crate::catch_and_abort(|| {
+                    let data_slice = unsafe { ::std::slice::from_raw_parts(data, size) };
+                    rust_fuzzer_test_input(data_slice)
+                })
+            }
+
             /// LLVMFuzzerInitialize is called once before the fuzzer starts.
             #[no_mangle]
-            pub extern "C" fn LLVMFuzzerInitialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
-                $crate::initialize(_argc, _argv);
+            pub extern "C" fn LLVMFuzzerInitialize(
+                _argc: *mut ::std::ffi::c_int,
+                _argv: *mut *mut *mut ::std::ffi::c_char,
+            ) -> ::std::ffi::c_int {
+                $crate::initialize();
 
                 // Supplied init code
                 $init;
                 0
             }
 
-            #[no_mangle]
-            pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) -> i32 {
+            fn rust_fuzzer_test_input(bytes: &[u8]) -> ::std::ffi::c_int {
                 // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
                 // formatting of the input to that file. This is only intended for
                 // `cargo fuzz`'s use!
 
-                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
+                // `RUST_LIBFUZZER_DEBUG_PATH` is read lazily.
                 if let Some(path) = $crate::rust_libfuzzer_debug_path() {
-                    use std::io::Write;
-                    let mut file = std::fs::File::create(path)
-                        .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
-                    writeln!(&mut file, "{:?}", bytes)
-                        .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    $crate::write_debug_path(path, ::std::format_args!("{:?}", bytes));
                     return 0;
                 }
 
-                let result = ::libfuzzer_sys::Corpus::from(__libfuzzer_sys_run(bytes));
-                result.to_libfuzzer_code()
+                let result = $crate::Corpus::from(__libfuzzer_sys_run(bytes));
+                result.into_libfuzzer_code()
             }
 
             // Split out the actual fuzzer into a separate function which is
@@ -310,19 +320,28 @@ macro_rules! fuzz_target {
 
     (init: $init:expr, |$data:ident: $dty:ty| -> $rty:ty $body:block) => {
         const _: () = {
-            /// Auto-generated functions
+            #[no_mangle]
+            pub unsafe extern "C" fn LLVMFuzzerTestOneInput(data: *const u8, size: usize) -> ::std::ffi::c_int {
+                $crate::catch_and_abort(|| {
+                    let data_slice = unsafe { ::std::slice::from_raw_parts(data, size) };
+                    rust_fuzzer_test_input(data_slice)
+                })
+            }
+
             /// LLVMFuzzerInitialize is called once before the fuzzer starts.
             #[no_mangle]
-            pub extern "C" fn LLVMFuzzerInitialize(_argc: *const isize, _argv: *const *const *const u8) -> isize {
-                $crate::initialize(_argc, _argv);
+            pub extern "C" fn LLVMFuzzerInitialize(
+                _argc: *mut ::std::ffi::c_int,
+                _argv: *mut *mut *mut ::std::ffi::c_char,
+            ) -> ::std::ffi::c_int {
+                $crate::initialize();
 
                 // Supplied init code
                 $init;
                 0
             }
 
-            #[no_mangle]
-            pub extern "C" fn rust_fuzzer_test_input(bytes: &[u8]) -> i32 {
+            fn rust_fuzzer_test_input(bytes: &[u8]) -> ::std::ffi::c_int {
                 use $crate::arbitrary::{Arbitrary, Unstructured};
 
                 // Early exit if we don't have enough bytes for the `Arbitrary`
@@ -335,23 +354,19 @@ macro_rules! fuzz_target {
                     return -1;
                 }
 
-                let mut u = Unstructured::new(bytes);
+                let u = Unstructured::new(bytes);
                 let data = <$dty as Arbitrary>::arbitrary_take_rest(u);
 
                 // When `RUST_LIBFUZZER_DEBUG_PATH` is set, write the debug
                 // formatting of the input to that file. This is only intended for
                 // `cargo fuzz`'s use!
 
-                // `RUST_LIBFUZZER_DEBUG_PATH` is set in initialization.
+                // `RUST_LIBFUZZER_DEBUG_PATH` is read lazily.
                 if let Some(path) = $crate::rust_libfuzzer_debug_path() {
-                    use std::io::Write;
-                    let mut file = std::fs::File::create(path)
-                        .expect("failed to create `RUST_LIBFUZZER_DEBUG_PATH` file");
-                    (match data {
-                        Ok(data) => writeln!(&mut file, "{:#?}", data),
-                        Err(err) => writeln!(&mut file, "Arbitrary Error: {}", err),
-                    })
-                    .expect("failed to write to `RUST_LIBFUZZER_DEBUG_PATH` file");
+                    match data {
+                        Ok(data) => $crate::write_debug_path(path, ::std::format_args!("{:#?}", data)),
+                        Err(err) => $crate::write_debug_path(path, ::std::format_args!("Arbitrary Error: {}", err)),
+                    };
                     return -1;
                 }
 
@@ -360,8 +375,8 @@ macro_rules! fuzz_target {
                     Err(_) => return -1,
                 };
 
-                let result = ::libfuzzer_sys::Corpus::from(__libfuzzer_sys_run(data));
-                result.to_libfuzzer_code()
+                let result = $crate::Corpus::from(__libfuzzer_sys_run(data));
+                result.into_libfuzzer_code()
             }
             // See above for why this is split to a separate function.
             #[inline(never)]
@@ -506,7 +521,7 @@ macro_rules! fuzz_target {
 /// ## More Example Ideas
 ///
 /// * A PNG custom mutator that decodes a PNG, mutates the image, and then
-/// re-encodes the mutated image as a new PNG.
+///   re-encodes the mutated image as a new PNG.
 ///
 /// * A [`serde`](https://serde.rs/) custom mutator that deserializes your
 ///   structure, mutates it, and then reserializes it.
@@ -531,11 +546,11 @@ macro_rules! fuzz_mutator {
         /// consumption.
         #[export_name = "LLVMFuzzerCustomMutator"]
         #[doc(hidden)]
-        pub unsafe fn rust_fuzzer_custom_mutator(
+        pub unsafe extern "C" fn rust_fuzzer_custom_mutator(
             $data: *mut u8,
             $size: usize,
             $max_size: usize,
-            $seed: std::os::raw::c_uint,
+            $seed: ::std::ffi::c_uint,
         ) -> usize {
             // Depending on if we are growing or shrinking the test case, `size`
             // might be larger or smaller than `max_size`. The `data`'s capacity
@@ -717,14 +732,14 @@ macro_rules! fuzz_crossover {
         /// consumption.
         #[export_name = "LLVMFuzzerCustomCrossOver"]
         #[doc(hidden)]
-        pub unsafe fn rust_fuzzer_custom_crossover(
+        pub unsafe extern "C" fn rust_fuzzer_custom_crossover(
             $data1: *const u8,
             size1: usize,
             $data2: *const u8,
             size2: usize,
             $out: *mut u8,
             max_out_size: usize,
-            $seed: std::os::raw::c_uint,
+            $seed: ::std::ffi::c_uint,
         ) -> usize {
             let $data1: &[u8] = std::slice::from_raw_parts($data1, size1);
             let $data2: &[u8] = std::slice::from_raw_parts($data2, size2);

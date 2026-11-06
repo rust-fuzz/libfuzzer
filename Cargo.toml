@@ -19,16 +19,23 @@ exclude = [
     "update-libfuzzer.sh", # there is no need for downstream crates to execute this script
 ]
 
+[package.metadata.docs.rs]
+features = ["fuzz_macro"]
+
 [dependencies]
 arbitrary = "1"
+
+[target.'cfg(unix)'.dependencies]
+libc = { version = "0.2", optional = true }
 
 [build-dependencies]
 cc = { version = "1.0.83", features = ["parallel"] }
 
 [features]
 default = ["link_libfuzzer"]
-link_libfuzzer = []
 arbitrary-derive = ["arbitrary/derive"]
+fuzz_macro = ["dep:libc"]
+link_libfuzzer = []
 
 [workspace]
 members = [

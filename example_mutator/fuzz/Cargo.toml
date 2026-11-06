@@ -14,3 +14,4 @@ libfuzzer-sys = { path = "../.." }
 [[bin]]
 name = "boom"
 path = "fuzz_targets/boom.rs"
+test = false
