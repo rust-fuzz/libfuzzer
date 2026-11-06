@@ -8,9 +8,20 @@ edition = "2018"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = { path = "../.." }
+libfuzzer-sys = { path = "../..", features = ["fuzz_macro"] }
 example = { path = ".." }
 
 [[bin]]
 name = "bananas"
 path = "fuzz_targets/bananas.rs"
+test = false
+
+[[bin]]
+name = "bananas-main"
+path = "fuzz_targets/bananas_main.rs"
+test = false
+
+[[bin]]
+name = "segfault-main"
+path = "fuzz_targets/segfault_main.rs"
+test = false

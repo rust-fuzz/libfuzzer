@@ -8,9 +8,15 @@ edition = "2018"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = { path = "../..", features = ["arbitrary-derive"] }
+libfuzzer-sys = { path = "../..", features = ["arbitrary-derive", "fuzz_macro"] }
 example_arbitrary = { path = ".." }
 
 [[bin]]
 name = "rgb"
 path = "fuzz_targets/rgb.rs"
+test = false
+
+[[bin]]
+name = "rgb-main"
+path = "fuzz_targets/rgb_main.rs"
+test = false

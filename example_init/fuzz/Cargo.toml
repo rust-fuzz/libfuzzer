@@ -8,9 +8,15 @@ edition = "2018"
 cargo-fuzz = true
 
 [dependencies]
-libfuzzer-sys = { path = "../.." }
+libfuzzer-sys = { path = "../..", features = ["fuzz_macro"] }
 example_init = { path = ".." }
 
 [[bin]]
 name = "bigbang"
 path = "fuzz_targets/bigbang.rs"
+test = false
+
+[[bin]]
+name = "bigbang-main"
+path = "fuzz_targets/bigbang_main.rs"
+test = false

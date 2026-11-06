@@ -15,3 +15,4 @@ example_crossover = { path = ".." }
 [[bin]]
 name = "boom"
 path = "fuzz_targets/boom.rs"
+test = false
